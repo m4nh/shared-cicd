@@ -1,0 +1,27 @@
+name: 'Extract Version from VCS'
+description: 'Extracts the latest semantic version from git tags and returns it.'
+
+# 1. Define the public outputs of the action
+outputs:
+  extracted-version:
+    description: "The semantic version without the 'v' prefix"
+    # Map this to the specific step ID and the variable name you used in GITHUB_OUTPUT
+    value: ${{ steps.version-step.outputs.VERSION }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Extract current version from VCS
+      # 2. Give the step an ID so the outputs block can reference it
+      id: version-step 
+      shell: bash
+      run: |
+        # Get the latest release tag (vX.Y.Z only), ignoring develop tags
+        VERSION=$(git tag -l 'v*' | grep -P '^v\d+\.\d+\.\d+$' | sort -V | tail -1 | sed 's/^v//')
+        if [ -z "$VERSION" ]; then
+          echo "::error::No release tags found"
+          exit 1
+        fi
+        
+        # 3. Write to GITHUB_OUTPUT
+        echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
