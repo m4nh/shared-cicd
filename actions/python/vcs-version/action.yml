@@ -11,6 +11,9 @@ outputs:
 runs:
   using: "composite"
   steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
     - name: Extract current version from VCS
       # 2. Give the step an ID so the outputs block can reference it
       id: version-step 
