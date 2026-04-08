@@ -44,4 +44,20 @@ runs:
       shell: bash
       working-directory: ${{ inputs.package-dir }}
       run: |
-        python -m twine show dist/*
+        python -c "
+        import os
+        import zipfile
+        from email import message_from_bytes
+        wheels = [f for f in os.listdir('dist') if f.endswith('.whl')]
+        for w in wheels:
+            print(f'Wheel: {w}')
+            with zipfile.ZipFile(f'dist/{w}') as zf:
+                try:
+                    with zf.open('METADATA') as f:
+                        msg = message_from_bytes(f.read())
+                        print(f'  Name: {msg.get(\"Name\")}')
+                        print(f'  Version: {msg.get(\"Version\")}')
+                        print(f'  Summary: {msg.get(\"Summary\")}')
+                except Exception as e:
+                    print(f'  Could not read metadata: {e}')
+        "
