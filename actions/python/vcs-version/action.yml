@@ -17,7 +17,7 @@ runs:
       shell: bash
       run: |
         # Get the latest release tag (vX.Y.Z only), ignoring develop tags
-        VERSION=$(git tag -l 'v*' --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -n 1 | sed 's/^v//')
+        VERSION=$(git tag -l 'v*' --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -n 1 | sed 's/^v//' || true)
         if [ -z "$VERSION" ]; then
           echo "::error::No release tags found"
           exit 1
