@@ -210,8 +210,7 @@
                 <mxCell id="17" style="edgeStyle=orthogonalEdgeStyle;html=1;entryX=0.25;entryY=0;entryDx=0;entryDy=0;dashed=1;rounded=0;" edge="1" parent="1" source="16" target="job-test">
                     <mxGeometry relative="1" as="geometry">
                         <Array as="points">
-                            <mxPoint x="280" y="100"/>
-                            <mxPoint x="280" y="430"/>
+                            <mxPoint x="250" y="430"/>
                             <mxPoint x="320" y="430"/>
                         </Array>
                     </mxGeometry>
@@ -228,18 +227,18 @@
                 <mxCell id="29" style="edgeStyle=orthogonalEdgeStyle;html=1;entryX=0.75;entryY=0;entryDx=0;entryDy=0;rounded=0;dashed=1;" edge="1" parent="1" source="16" target="job-lint">
                     <mxGeometry relative="1" as="geometry">
                         <Array as="points">
-                            <mxPoint x="220" y="430"/>
+                            <mxPoint x="250" y="430"/>
                             <mxPoint x="190" y="430"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="30" style="edgeStyle=orthogonalEdgeStyle;html=1;dashed=1;strokeColor=default;rounded=0;curved=0;" edge="1" parent="1" source="16">
+                <mxCell id="30" style="edgeStyle=orthogonalEdgeStyle;html=1;dashed=1;strokeColor=default;rounded=0;curved=0;entryX=0.25;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="16" target="job-sec">
                     <mxGeometry relative="1" as="geometry">
                         <mxPoint x="1010" y="460" as="targetPoint"/>
                         <Array as="points">
-                            <mxPoint x="960" y="100"/>
-                            <mxPoint x="960" y="420"/>
-                            <mxPoint x="1010" y="420"/>
+                            <mxPoint x="470" y="100"/>
+                            <mxPoint x="470" y="430"/>
+                            <mxPoint x="550" y="430"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
