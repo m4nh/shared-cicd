@@ -1,0 +1,45 @@
+name: "Semantic Release"
+description: "Create tags and GitHub releases using python-semantic-release with automatic versioning"
+
+inputs:
+  github-token:
+    description: "GitHub token for creating releases and tags (usually secrets.GITHUB_TOKEN)"
+    required: true
+  commit:
+    description: "Whether to commit version changes (false recommended for tag-only releases)"
+    required: false
+    default: "false"
+  push:
+    description: "Whether to push tags and release info to GitHub"
+    required: false
+    default: "true"
+  vcs-release:
+    description: "Whether to create a GitHub release"
+    required: false
+    default: "true"
+
+outputs:
+  released:
+    description: "Boolean indicating if a new version was released"
+    value: ${{ steps.semantic-release.outputs.released }}
+  version:
+    description: "The released version number (e.g., '1.2.3')"
+    value: ${{ steps.semantic-release.outputs.version }}
+  tag:
+    description: "The git tag created (e.g., 'v1.2.3')"
+    value: ${{ steps.semantic-release.outputs.tag }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Run Python Semantic Release
+      id: semantic-release
+      uses: python-semantic-release/python-semantic-release@v9
+      with:
+        github_token: ${{ inputs.github-token }}
+        git_committer_name: "github-actions[bot]"
+        git_committer_email: "github-actions[bot]@users.noreply.github.com"
+        commit: ${{ inputs.commit }}
+        tag: "true"
+        push: ${{ inputs.push }}
+        vcs_release: ${{ inputs.vcs-release }}

@@ -1,0 +1,45 @@
+name: "Publish Package to Nexus"
+description: "Publish a Python package to Nexus repository using twine"
+
+inputs:
+  nexus-username:
+    description: "Nexus username for authentication"
+    required: true
+  nexus-password:
+    description: "Nexus password for authentication"
+    required: true
+  wheel-path:
+    description: "Path to the wheel file or directory containing wheels (e.g., dist/)"
+    required: true
+  python-version:
+    description: "Python version to use"
+    required: false
+    default: "3.11"
+  repository-url:
+    description: "Nexus repository URL"
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Python ${{ inputs.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    - name: Install twine
+      shell: bash
+      run: pip install twine
+
+    - name: Upload to Nexus
+      shell: bash
+      env:
+        TWINE_USERNAME: ${{ inputs.nexus-username }}
+        TWINE_PASSWORD: ${{ inputs.nexus-password }}
+        REPOSITORY_URL: ${{ inputs.repository-url }}
+      run: |
+        twine upload \
+          --repository-url "$REPOSITORY_URL" \
+          -u "$TWINE_USERNAME" \
+          -p "$TWINE_PASSWORD" \
+          "${{ inputs.wheel-path }}"
