@@ -1,33 +1,33 @@
 # Extract Version from VCS Action
 
-A composite GitHub Action that extracts the latest semantic version from git tags in your repository.
+A simple GitHub Action that extracts the latest semantic version tag from git with a configurable prefix.
 
 ## Overview
 
 This action simplifies version extraction in your CI/CD workflows by:
 
 - Automatically fetching the latest semantic version tag from git
-- Returning the version in multiple formats (with/without prefix, full tag)
-- Supporting optional fallback versions for repositories without tags
-- Customizable tag pattern matching
+- Supporting custom tag prefixes (e.g., `v`, `release-`, etc.)
+- Returning the version in two formats: with and without prefix
+- Using sensible defaults (prefix `v`, fallback `0.0.0`)
 - Clear output indicating whether a tag was found
 
 Perfect for use in release workflows, version bumping, and automated deployments.
 
 ## Inputs
 
-| Input              | Required | Default | Description                                                                      |
-| ------------------ | -------- | ------- | -------------------------------------------------------------------------------- |
-| `tag-pattern`      | No       | `v*`    | Regex pattern for git tags to search (e.g., `v*`, `release-*`)                   |
-| `fallback-version` | No       | —       | Version to return if no matching tags found (if not provided, action will error) |
+| Input              | Required | Default | Description                                               |
+| ------------------ | -------- | ------- | --------------------------------------------------------- |
+| `tag-prefix`       | No       | `v`     | Prefix for semantic version tags (e.g., `v` for `v1.0.0`) |
+| `fallback-version` | No       | `0.0.0` | Version to return if no matching tags found               |
 
 ## Outputs
 
-| Output    | Description                                                               |
-| --------- | ------------------------------------------------------------------------- |
-| `version` | The semantic version without the 'v' prefix (e.g., `1.2.3`)               |
-| `tag`     | The full git tag including prefix (e.g., `v1.2.3`)                        |
-| `found`   | Boolean string indicating if a matching tag was found (`true` or `false`) |
+| Output    | Description                                                                       |
+| --------- | --------------------------------------------------------------------------------- |
+| `version` | The semantic version **without the 'v' prefix** (e.g., `1.2.3` from tag `v1.2.3`) |
+| `tag`     | The full git tag **as matched** (e.g., `v1.2.3`)                                  |
+| `found`   | Boolean string indicating if a matching tag was found (`true` or `false`)         |
 
 ## Usage
 
@@ -75,7 +75,7 @@ For repositories that might not have any tags yet, provide a fallback:
     echo "Was found: ${{ steps.version.outputs.found }}"
 ```
 
-### With Custom Tag Pattern
+### With Custom Tag Prefix
 
 If you use a different tag naming convention:
 
@@ -84,7 +84,7 @@ If you use a different tag naming convention:
   uses: m4nh/shared-cicd/actions/python/vcs-version@main
   id: version
   with:
-    tag-pattern: "release-*"
+    tag-prefix: "release-"
 
 - name: Build with version
   run: |
@@ -113,29 +113,34 @@ If you use a different tag naming convention:
 
 ## How It Works
 
-1. **Fetches all git history** - Uses `fetch-depth: 0` to retrieve all tags
-2. **Searches for semantic version tags** - Looks for tags matching the pattern `vX.Y.Z` (e.g., `v1.2.3`, `v2.0.0`)
-3. **Returns the latest tag** - Uses git version sorting to find the most recent version
-4. **Extracts version variants** - Provides both prefixed and unprefixed versions for flexibility
+This action searches for semantic version tags with a specific prefix in the format `<prefix>X.Y.Z`:
 
-## Tag Format Requirements
+1. Uses `git tag -l '<prefix>*'` to find tags with the specified prefix
+2. Filters for semantic version format: `<prefix>[0-9]+\.[0-9]+\.[0-9]+`
+3. Returns the latest version using git version sorting
+4. Strips the prefix for the `version` output, keeps it for the `tag` output
 
-By default, this action expects git tags in semantic versioning format with a `v` prefix:
+**Examples with default prefix `v`:**
 
-- ✅ Valid: `v1.0.0`, `v2.1.3`, `v0.1.0`
-- ❌ Invalid: `1.0.0` (missing `v`), `version-1.0.0` (wrong prefix), `v1.0` (incomplete version)
+- ✅ `v1.0.0` → version: `1.0.0`, tag: `v1.0.0`, found: `true`
+- ✅ `v2.1.3` → version: `2.1.3`, tag: `v2.1.3`, found: `true`
+- ❌ `1.0.0` → not matched (no v prefix)
+- ❌ `v1.0.0-beta` → not matched (has suffix)
+- ❌ No tags → returns fallback: `0.0.0`, found: `false`
 
-To support different naming schemes, use the `tag-pattern` input with a custom regex:
+**With custom prefix `release-`:**
 
 ```yaml
 with:
-  tag-pattern: "release-*"
+  tag-prefix: "release-"
 ```
+
+- ✅ `release-1.0.0` → version: `1.0.0`, tag: `release-1.0.0`, found: `true`
+- ✅ `release-2.5.1` → version: `2.5.1`, tag: `release-2.5.1`, found: `true`
 
 ## Error Handling
 
-- **No tags found & no fallback**: Action fails with error message
-- **No tags found & fallback provided**: Action succeeds, returns fallback version with `found: false`
+- **No tags found**: Returns fallback version (default `0.0.0`) with `found: false`
 - **Invalid tag format**: Tags that don't match the semantic version pattern are ignored
 
 ## Common Patterns
@@ -197,17 +202,17 @@ jobs:
 
 ## Troubleshooting
 
-### Action fails with "No release tags found"
+### Action returns fallback version `0.0.0`
 
-**Cause**: Repository has no semantic version tags.
+**Cause**: Repository has no semantic version tags matching the prefix.
 
-**Solution**: Either create a tag (`git tag v1.0.0 && git push --tags`) or use the `fallback-version` input.
+**Solution**: Create a tag matching your prefix (e.g., `git tag v1.0.0 && git push --tags`) or verify the `tag-prefix` is correct.
 
 ### Wrong version returned
 
-**Cause**: Git tags exist but don't match the expected pattern.
+**Cause**: Git tags exist but don't match the semantic version format `<prefix>X.Y.Z`.
 
-**Solution**: Check your tag format. Valid: `v1.2.3`. Invalid: `1.2.3` or `release-1.2.3` (use `tag-pattern: "release-*"` for custom formats).
+**Solution**: Check your tag format. Valid: `v1.2.3`, `release-1.2.3`. Invalid: `1.2.3` (wrong prefix), `v1.0.0-beta` (has suffix).
 
 ### Version not updated after pushing new tag
 
