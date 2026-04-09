@@ -1,12 +1,26 @@
-name: 'Extract Version from VCS'
-description: 'Extracts the latest semantic version from git tags and returns it.'
+name: "Extract Version from VCS"
+description: "Extracts the latest semantic version from git tags and returns it."
 
-# 1. Define the public outputs of the action
+inputs:
+  tag-pattern:
+    description: "Regex pattern for git tags (default: 'v*' matching vX.Y.Z format)"
+    required: false
+    default: "v*"
+  fallback-version:
+    description: "Version to return if no tags match the pattern (optional, will error if not provided and no tags found)"
+    required: false
+    default: ""
+
 outputs:
-  extracted-version:
-    description: "The semantic version without the 'v' prefix"
-    # Map this to the specific step ID and the variable name you used in GITHUB_OUTPUT
+  version:
+    description: "The semantic version without the 'v' prefix (e.g., '1.2.3')"
     value: ${{ steps.version-step.outputs.VERSION }}
+  tag:
+    description: "The full git tag including prefix (e.g., 'v1.2.3')"
+    value: ${{ steps.version-step.outputs.TAG }}
+  found:
+    description: "Whether a matching tag was found ('true' or 'false')"
+    value: ${{ steps.version-step.outputs.FOUND }}
 
 runs:
   using: "composite"
@@ -15,16 +29,25 @@ runs:
       with:
         fetch-depth: 0
     - name: Extract current version from VCS
-      # 2. Give the step an ID so the outputs block can reference it
-      id: version-step 
+      id: version-step
       shell: bash
       run: |
         # Get the latest release tag (vX.Y.Z only), ignoring develop tags
-        VERSION=$(git tag -l 'v*' --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -n 1 | sed 's/^v//' || true)
-        if [ -z "$VERSION" ]; then
-          echo "::error::No release tags found"
-          exit 1
+        TAG=$(git tag -l '${{ inputs.tag-pattern }}' --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -n 1 || true)
+
+        if [ -z "$TAG" ]; then
+          if [ -n "${{ inputs.fallback-version }}" ]; then
+            echo "::warning::No release tags found, using fallback version: ${{ inputs.fallback-version }}"
+            echo "VERSION=${{ inputs.fallback-version }}" >> $GITHUB_OUTPUT
+            echo "TAG=" >> $GITHUB_OUTPUT
+            echo "FOUND=false" >> $GITHUB_OUTPUT
+          else
+            echo "::error::No release tags found matching pattern: ${{ inputs.tag-pattern }}"
+            exit 1
+          fi
+        else
+          VERSION=$(echo "$TAG" | sed 's/^v//')
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "TAG=$TAG" >> $GITHUB_OUTPUT
+          echo "FOUND=true" >> $GITHUB_OUTPUT
         fi
-        
-        # 3. Write to GITHUB_OUTPUT
-        echo "VERSION=$VERSION" >> $GITHUB_OUTPUT

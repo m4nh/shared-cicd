@@ -1,0 +1,219 @@
+<mxfile host="65bd71144e">
+    <diagram name="CI Python Workflow" id="diagram-1">
+        <mxGraphModel dx="1385" dy="519" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="1000" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="22" style="edgeStyle=none;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="start" target="cond-lint">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="23" style="edgeStyle=none;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="start" target="cond-test">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="24" style="edgeStyle=none;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="start" target="3">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="25" style="edgeStyle=none;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="start" target="cond-wheel">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="26" style="edgeStyle=none;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="start" target="cond-docker">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="start" value="🚀 Workflow Triggered" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1f5ff;strokeColor=#01579b;strokeWidth=3" parent="1" vertex="1">
+                    <mxGeometry x="550" y="120" width="200" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="cond-lint" value="lint-enabled?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#e0f2f1;strokeColor=#004d40" parent="1" vertex="1">
+                    <mxGeometry x="80" y="270" width="120" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="cond-test" value="tests-enabled?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#e0f2f1;strokeColor=#004d40" parent="1" vertex="1">
+                    <mxGeometry x="310" y="270" width="120" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="cond-wheel" value="build-wheel-enabled?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#e0f2f1;strokeColor:#004d40" parent="1" vertex="1">
+                    <mxGeometry x="770" y="270" width="120" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="cond-docker" value="build-docker &amp;&amp;&#xa;docker-tags?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#e0f2f1;strokeColor:#004d40" parent="1" vertex="1">
+                    <mxGeometry x="1000" y="270" width="120" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="10" style="edgeStyle=orthogonalEdgeStyle;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;rounded=0;curved=0;" edge="1" parent="1" source="job-lint" target="results">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="140" y="780"/>
+                            <mxPoint x="650" y="780"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="job-lint" value="🔍 LINT JOB&#xa;Python: 3.11&#xa;&#xa;- Checkout&#xa;- Run linter" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8e6c9;strokeColor=#2e7d32;strokeWidth=2" parent="1" vertex="1">
+                    <mxGeometry x="40" y="460" width="200" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="arrow-lint-yes" value="YES" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2" parent="1" source="cond-lint" target="job-lint" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="140" y="370" as="sourcePoint"/>
+                        <mxPoint x="140" y="430" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="arrow-lint-no" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;fontStyle=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="cond-lint" target="skip-docker" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="200" y="320" as="sourcePoint"/>
+                        <mxPoint x="280" y="450" as="targetPoint"/>
+                        <Array as="points">
+                            <mxPoint x="140" y="380"/>
+                            <mxPoint x="1250" y="380"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="11" style="edgeStyle=orthogonalEdgeStyle;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;rounded=0;curved=0;" edge="1" parent="1" source="job-test" target="results">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="370" y="780"/>
+                            <mxPoint x="650" y="780"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="job-test" value="✅ TEST JOBS (MATRIX)&#xa;All Python versions&#xa;e.g. 3.10, 3.11, 3.12&#xa;&#xa;- Checkout&#xa;- Setup Python&#xa;- Run pytest" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8e6c9;strokeColor=#2e7d32;strokeWidth=2" parent="1" vertex="1">
+                    <mxGeometry x="270" y="600" width="200" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="arrow-test-yes" value="YES" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="cond-test" target="16" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="370" y="370" as="sourcePoint"/>
+                        <mxPoint x="380" y="480" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="arrow-test-no" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2" parent="1" source="cond-test" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="430" y="320" as="sourcePoint"/>
+                        <mxPoint x="1250" y="480" as="targetPoint"/>
+                        <Array as="points">
+                            <mxPoint x="370" y="380"/>
+                            <mxPoint x="1250" y="380"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="12" style="edgeStyle=orthogonalEdgeStyle;html=1;rounded=0;curved=0;" edge="1" parent="1" source="job-sec" target="results">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="600" y="780"/>
+                            <mxPoint x="650" y="780"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="job-sec" value="🔐 SECURITY JOB&#xa;Python: 3.11&#xa;&#xa;- Checkout&#xa;- Run bandit&#xa;- Run pip-audit" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8e6c9;strokeColor=#2e7d32;strokeWidth=2" parent="1" vertex="1">
+                    <mxGeometry x="500" y="460" width="200" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="arrow-sec-yes" value="YES" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" parent="1" source="3" target="job-sec" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="600" y="349.9999999999999" as="sourcePoint"/>
+                        <mxPoint x="600" y="430" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="13" style="edgeStyle=orthogonalEdgeStyle;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;rounded=0;curved=0;" edge="1" parent="1" source="job-wheel" target="results">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="830" y="780"/>
+                            <mxPoint x="650" y="780"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="job-wheel" value="📦 BUILD WHEEL JOB&#xa;Python: 3.11&#xa;&#xa;- Checkout&#xa;- Setup Python&#xa;- Build wheel" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8e6c9;strokeColor=#2e7d32;strokeWidth=2" parent="1" vertex="1">
+                    <mxGeometry x="730" y="460" width="200" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="arrow-wheel-yes" value="YES" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2" parent="1" source="cond-wheel" target="job-wheel" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="830" y="370" as="sourcePoint"/>
+                        <mxPoint x="830" y="430" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="arrow-wheel-no" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="cond-wheel" target="skip-docker" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="890" y="320" as="sourcePoint"/>
+                        <mxPoint x="970" y="450" as="targetPoint"/>
+                        <Array as="points">
+                            <mxPoint x="830" y="380"/>
+                            <mxPoint x="1250" y="380"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="9" value="&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; NO" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="arrow-wheel-no">
+                    <mxGeometry x="0.6902" relative="1" as="geometry">
+                        <mxPoint y="15" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="14" style="edgeStyle=orthogonalEdgeStyle;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;rounded=0;curved=0;" edge="1" parent="1" source="job-docker" target="results">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1060" y="780"/>
+                            <mxPoint x="650" y="780"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="job-docker" value="🐳 BUILD DOCKER JOB&#xa;&#xa;- Checkout&#xa;- Docker build&#xa;- Tag image" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8e6c9;strokeColor=#2e7d32;strokeWidth=2" parent="1" vertex="1">
+                    <mxGeometry x="960" y="460" width="200" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="arrow-docker-yes" value="YES" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2" parent="1" source="cond-docker" target="job-docker" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="1060" y="370" as="sourcePoint"/>
+                        <mxPoint x="1060" y="430" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="skip-docker" value="⏭️ Skipped" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffccbc;strokeColor:#bf360c" parent="1" vertex="1">
+                    <mxGeometry x="1200" y="480" width="100" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="arrow-docker-no" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;" parent="1" source="cond-docker" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="1120" y="320" as="sourcePoint"/>
+                        <mxPoint x="1250" y="480" as="targetPoint"/>
+                        <Array as="points">
+                            <mxPoint x="1060" y="380"/>
+                            <mxPoint x="1250" y="380"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="results" value="All Jobs&#xa;Complete" style="rhombus;whiteSpace=wrap;html=1;fillColor=#e1bee7;strokeColor=#6a1b9a;strokeWidth=2" parent="1" vertex="1">
+                    <mxGeometry x="530" y="840" width="240" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="arrow-skip-docker-results" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1" parent="1" source="skip-docker" target="results" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1250" y="780"/>
+                            <mxPoint x="650" y="780"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="success" value="✅ WORKFLOW SUCCESS" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#a5d6a7;strokeColor=#1b5e20;strokeWidth=3" parent="1" vertex="1">
+                    <mxGeometry x="290" y="1010" width="240" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="arrow-results-success" value="All Passed" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2" parent="1" source="results" target="success" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="550" y="940" as="sourcePoint"/>
+                        <mxPoint x="520" y="1010" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="failure" value="❌ WORKFLOW FAILED" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ef9a9a;strokeColor=#b71c1c;strokeWidth=3" parent="1" vertex="1">
+                    <mxGeometry x="770" y="1010" width="240" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="arrow-results-failure" value="Any Failed" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2" parent="1" source="results" target="failure" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="680" y="940" as="sourcePoint"/>
+                        <mxPoint x="870" y="1010" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="15" style="edgeStyle=orthogonalEdgeStyle;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;rounded=0;curved=0;" edge="1" parent="1" source="3" target="skip-docker">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="600" y="380"/>
+                            <mxPoint x="1250" y="380"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="3" value="&lt;span&gt;&lt;font style=&quot;color: light-dark(rgb(255, 255, 255), rgb(255, 255, 255));&quot;&gt;security-enabled?&lt;/font&gt;&lt;/span&gt;" style="rhombus;whiteSpace=wrap;html=1;fillColor=#e0f2f1;strokeColor:#004d40" vertex="1" parent="1">
+                    <mxGeometry x="540" y="270" width="120" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="17" style="edgeStyle=none;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="16" target="job-test">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="16" value="&lt;font style=&quot;&quot;&gt;&lt;span style=&quot;color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;📦 Extract Python Versions&lt;/span&gt;&lt;br style=&quot;scrollbar-color: rgb(75, 75, 75) rgb(27, 29, 30);&quot;&gt;&lt;span style=&quot;color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;(always runs)&lt;/span&gt;&lt;br style=&quot;scrollbar-color: rgb(75, 75, 75) rgb(27, 29, 30);&quot;&gt;&lt;br style=&quot;scrollbar-color: rgb(75, 75, 75) rgb(27, 29, 30);&quot;&gt;&lt;span style=&quot;color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;Outputs:&lt;/span&gt;&lt;br style=&quot;scrollbar-color: rgb(75, 75, 75) rgb(27, 29, 30);&quot;&gt;&lt;font style=&quot;color: rgb(252, 252, 252);&quot;&gt;- python-versions&lt;br style=&quot;scrollbar-color: rgb(75, 75, 75) rgb(27, 29, 30);&quot;&gt;&lt;/font&gt;&lt;span style=&quot;color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;- min-version&lt;/span&gt;&lt;br style=&quot;scrollbar-color: rgb(75, 75, 75) rgb(27, 29, 30);&quot;&gt;&lt;span style=&quot;color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;- max-version&lt;/span&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8e6c9;strokeColor=#2e7d32;strokeWidth=2" vertex="1" parent="1">
+                    <mxGeometry x="270" y="460" width="200" height="100" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

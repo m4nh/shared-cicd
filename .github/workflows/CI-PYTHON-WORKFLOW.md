@@ -206,36 +206,36 @@ jobs:
 
 ## Workflow Structure
 
-The workflow runs in this order:
+All jobs run **in parallel** (except steps within the Test job):
 
-1. **Extract Versions** (always runs)
-
-   - Extracts Python versions from source `pyproject.toml`
-   - Outputs: `python-versions`, `min-version`, `max-version`
-
-2. **Lint** (if enabled)
+1. **Lint** (if enabled)
 
    - Runs configured linter on specified path
    - Uses Python 3.11
+   - Runs independently
 
-3. **Test** (if enabled)
+2. **Test** (if enabled)
 
-   - Runs pytest on all Python versions from step 1
-   - Matrix strategy for parallel execution
+   - First extracts Python versions from `pyproject.toml`
+   - Then runs pytest on all extracted versions using matrix strategy
+   - Runs tests in parallel across multiple Python versions
 
-4. **Security** (if enabled)
+3. **Security** (if enabled)
 
    - Runs pip-audit and bandit
    - Uses Python 3.11
+   - Runs independently
 
-5. **Build Wheel** (if enabled)
+4. **Build Wheel** (if enabled)
 
    - Builds Python wheel
    - Uses Python 3.11
+   - Runs independently
 
-6. **Build Docker** (if enabled)
+5. **Build Docker** (if enabled)
    - Builds Docker image
    - Requires `docker-tags` to be set
+   - Runs independently
 
 ## Prerequisites in Your Repository
 
