@@ -45,12 +45,12 @@ jobs:
 
 Uses all defaults:
 
-- Python 3.11 for non-matrix jobs
+- Python versions extracted from `pyproject.toml` (min-version for single-run jobs, all versions for matrix tests)
 - Ruff for linting
 - Tests run on all versions from `pyproject.toml`
 - Security scanning enabled
 - Wheel building enabled
-- Docker disabled (unless you provide docker-tags)
+- Docker building enabled (requires docker-tags to actually build)
 
 ### Custom Configuration
 
@@ -104,7 +104,7 @@ jobs:
 | Input                  | Type    | Default | Description            |
 | ---------------------- | ------- | ------- | ---------------------- |
 | `build-wheel-enabled`  | boolean | `true`  | Enable wheel building  |
-| `build-docker-enabled` | boolean | `false` | Enable Docker building |
+| `build-docker-enabled` | boolean | `true`  | Enable Docker building |
 | `docker-tags`          | string  | ``      | Docker image tags      |
 | `docker-build-args`    | string  | ``      | Docker build arguments |
 
@@ -203,20 +203,23 @@ jobs:
 
 ## Workflow Structure
 
-The workflow runs in this order:
+The workflow runs as follows:
 
 1. **Extract Versions** (always runs first)
 
    - Extracts Python version range from source `pyproject.toml`
    - Outputs: `python-versions` (array of all versions), `min-version`, `max-version`
 
-2. **Lint**, **Security**, **Test**, **Build Wheel**, **Build Docker** (all wait for Extract Versions)
+2. **Lint**, **Security**, **Test**, **Build Wheel** (wait for Extract Versions)
 
    - **Lint** (if enabled) - Uses extracted `min-version`, runs configured linter
    - **Security** (if enabled) - Uses extracted `min-version`, runs bandit + pip-audit
    - **Test** (if enabled) - Uses matrix with all extracted `python-versions`, runs pytest in parallel
    - **Build Wheel** (if enabled) - Uses extracted `min-version`, builds Python wheel
-   - **Build Docker** (if enabled) - Builds Docker image with optional tags/build-args (no Python version needed)
+
+3. **Build Docker** (runs independently, in parallel with others)
+
+   - **Build Docker** (if enabled and `docker-tags` provided) - Builds Docker image with optional tags/build-args (runs concurrently, no Python version needed)
 
 ## Prerequisites in Your Repository
 
