@@ -1,0 +1,24 @@
+name: "Extract Python Versions"
+description: "Extract Python versions from pyproject.toml"
+
+outputs:
+  versions-matrix:
+    description: "Python versions as comma-separated string (e.g., '3.9,3.10,3.11')"
+    value: ${{ steps.extract.outputs.versions-matrix }}
+  versions-json:
+    description: "Python versions as JSON array"
+    value: ${{ steps.extract.outputs.versions-json }}
+  min-version:
+    description: "Minimum Python version"
+    value: ${{ steps.extract.outputs.min-version }}
+  max-version:
+    description: "Maximum Python version"
+    value: ${{ steps.extract.outputs.max-version }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Extract versions from pyproject.toml
+      id: extract
+      shell: bash
+      run: python ${{ github.action_path }}/extract-versions.py >> $GITHUB_OUTPUT

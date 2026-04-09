@@ -1,0 +1,58 @@
+name: "Build Python Wheel"
+description: "Build a Python wheel and output the path"
+
+inputs:
+  python-version:
+    description: "Python version to use"
+    required: false
+    default: "3.11"
+  build-tools:
+    description: "Build tools to install (space or comma-separated)"
+    required: false
+    default: "build hatch-vcs"
+  version:
+    description: "Override package version for building"
+    required: false
+    default: ""
+
+outputs:
+  wheel-path:
+    description: "Path to the built wheel file"
+    value: ${{ steps.build.outputs.wheel-path }}
+  wheel-paths:
+    description: "Space-separated list of all built wheel files"
+    value: ${{ steps.build.outputs.wheel-paths }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Python ${{ inputs.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ inputs.python-version }}
+        cache: pip
+        cache-dependency-path: pyproject.toml
+
+    - name: Upgrade pip
+      shell: bash
+      run: python -m pip install --upgrade pip
+
+    - name: Install build tools
+      shell: bash
+      run: pip install ${{ inputs.build-tools }}
+
+    - name: Build wheel
+      id: build
+      shell: bash
+      env:
+        SETUPTOOLS_SCM_PRETEND_VERSION: ${{ inputs.version }}
+      run: |
+        python -m build --wheel
+
+        # Find built wheels
+        WHEELS=$(find dist/ -name "*.whl" -type f)
+        FIRST_WHEEL=$(echo "$WHEELS" | head -n 1)
+        ALL_WHEELS=$(echo "$WHEELS" | tr '\n' ' ' | xargs)
+
+        echo "wheel-path=${FIRST_WHEEL}" >> $GITHUB_OUTPUT
+        echo "wheel-paths=${ALL_WHEELS}" >> $GITHUB_OUTPUT

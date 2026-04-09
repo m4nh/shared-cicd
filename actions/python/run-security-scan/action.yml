@@ -1,0 +1,66 @@
+name: "Run Security Scan"
+description: "Run security scanning tools (pip-audit and bandit) on Python project"
+
+inputs:
+  python-version:
+    description: "Python version to use"
+    required: false
+    default: "3.11"
+  scan-source-code:
+    description: "Enable bandit static security analysis"
+    required: false
+    default: "true"
+  source-path:
+    description: "Path to scan with bandit (e.g., 'src/')"
+    required: false
+    default: "src/"
+  audit-dependencies:
+    description: "Enable pip-audit dependency scanning"
+    required: false
+    default: "true"
+  bandit-args:
+    description: "Additional arguments for bandit"
+    required: false
+    default: "-ll -q"
+  pip-audit-args:
+    description: "Additional arguments for pip-audit"
+    required: false
+    default: ""
+  install-project:
+    description: "Install the project before scanning"
+    required: false
+    default: "false"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Python ${{ inputs.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ inputs.python-version }}
+        cache: pip
+        cache-dependency-path: pyproject.toml
+
+    - name: Upgrade pip
+      shell: bash
+      run: python -m pip install --upgrade pip
+
+    - name: Install security tools
+      shell: bash
+      run: |
+        pip install pip-audit bandit
+
+    - name: Install project dependencies
+      if: inputs.install-project == 'true'
+      shell: bash
+      run: pip install "."
+
+    - name: Run pip-audit (dependency scanning)
+      if: inputs.audit-dependencies == 'true'
+      shell: bash
+      run: pip-audit ${{ inputs.pip-audit-args }}
+
+    - name: Run bandit (static security analysis)
+      if: inputs.scan-source-code == 'true'
+      shell: bash
+      run: bandit -r ${{ inputs.source-path }} ${{ inputs.bandit-args }}

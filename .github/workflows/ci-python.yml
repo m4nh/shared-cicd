@@ -1,0 +1,156 @@
+name: CI - Python
+
+on:
+  workflow_call:
+    inputs:
+      runner:
+        description: "Runner to use"
+        required: false
+        type: string
+        default: "ubuntu-latest"
+      python-version:
+        description: "Default Python version for non-matrix jobs"
+        required: false
+        type: string
+        default: "3.11"
+      lint-enabled:
+        description: "Enable linting"
+        required: false
+        type: boolean
+        default: true
+      linter:
+        description: "Linter to use (ruff, flake8, pylint, black)"
+        required: false
+        type: string
+        default: "ruff"
+      linter-args:
+        description: "Additional linter arguments"
+        required: false
+        type: string
+        default: ""
+      lint-path:
+        description: "Path to lint"
+        required: false
+        type: string
+        default: "."
+      tests-enabled:
+        description: "Enable testing"
+        required: false
+        type: boolean
+        default: true
+      security-enabled:
+        description: "Enable security scanning"
+        required: false
+        type: boolean
+        default: true
+      security-source-path:
+        description: "Path for bandit security analysis"
+        required: false
+        type: string
+        default: "src/"
+      build-wheel-enabled:
+        description: "Enable wheel build"
+        required: false
+        type: boolean
+        default: true
+      build-docker-enabled:
+        description: "Enable Docker build"
+        required: false
+        type: boolean
+        default: false
+      docker-tags:
+        description: "Docker image tags (comma-separated)"
+        required: false
+        type: string
+        default: ""
+      docker-build-args:
+        description: "Docker build arguments"
+        required: false
+        type: string
+        default: ""
+
+jobs:
+  extract-versions:
+    name: Extract Python Versions
+    runs-on: ${{ inputs.runner }}
+    outputs:
+      python-versions: ${{ steps.extract.outputs.versions-json }}
+      min-version: ${{ steps.extract.outputs.min-version }}
+      max-version: ${{ steps.extract.outputs.max-version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Extract Python versions
+        uses: m4nh/shared-cicd/actions/python/extract-python-versions@main
+        id: extract
+
+  lint:
+    name: Lint
+    runs-on: ${{ inputs.runner }}
+    if: inputs.lint-enabled
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Python Lint
+        uses: m4nh/shared-cicd/actions/python/python-lint@main
+        with:
+          python-version: ${{ inputs.python-version }}
+          linter: ${{ inputs.linter }}
+          linter-args: ${{ inputs.linter-args }}
+          path: ${{ inputs.lint-path }}
+
+  test:
+    name: Test (Python ${{ matrix.python-version }})
+    runs-on: ${{ inputs.runner }}
+    if: inputs.tests-enabled
+    needs: extract-versions
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ${{ fromJson(needs.extract-versions.outputs.python-versions) }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run pytest
+        uses: m4nh/shared-cicd/actions/python/run-pytest@main
+        with:
+          python-version: ${{ matrix.python-version }}
+
+  security:
+    name: Security Scan
+    runs-on: ${{ inputs.runner }}
+    if: inputs.security-enabled
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run security scan
+        uses: m4nh/shared-cicd/actions/python/run-security-scan@main
+        with:
+          python-version: ${{ inputs.python-version }}
+          source-path: ${{ inputs.security-source-path }}
+
+  build-wheel:
+    name: Build Wheel
+    runs-on: ${{ inputs.runner }}
+    if: inputs.build-wheel-enabled
+    needs: [extract-versions]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build wheel
+        uses: m4nh/shared-cicd/actions/python/build-wheel@main
+        with:
+          python-version: ${{ inputs.python-version }}
+
+  build-docker:
+    name: Build Docker Image
+    runs-on: ${{ inputs.runner }}
+    if: inputs.build-docker-enabled && inputs.docker-tags != ''
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Docker image
+        uses: m4nh/shared-cicd/actions/docker/build-docker-image@main
+        with:
+          tags: ${{ inputs.docker-tags }}
+          build-args: ${{ inputs.docker-build-args }}

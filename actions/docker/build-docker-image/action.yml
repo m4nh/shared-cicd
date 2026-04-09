@@ -1,0 +1,48 @@
+name: "Build Docker Image"
+description: "Build a Docker image with custom build arguments"
+
+inputs:
+  dockerfile:
+    description: "Path to Dockerfile"
+    required: false
+    default: "Dockerfile"
+  context:
+    description: "Docker build context directory"
+    required: false
+    default: "."
+  tags:
+    description: "Docker image tags (comma or space-separated, e.g., 'myimage:latest,myimage:1.0.0')"
+    required: true
+  build-args:
+    description: "Docker build arguments (space-separated, e.g., '--build-arg VERSION=1.0.0 --build-arg ENV=prod')"
+    required: false
+    default: ""
+
+outputs:
+  image-id:
+    description: "Built image ID (short hash)"
+    value: ${{ steps.build.outputs.image-id }}
+  image-digest:
+    description: "Full image digest"
+    value: ${{ steps.build.outputs.image-digest }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Build Docker image
+      id: build
+      shell: bash
+      run: |
+        docker build \
+          -f ${{ inputs.dockerfile }} \
+          -t ${{ inputs.tags }} \
+          ${{ inputs.build-args }} \
+          ${{ inputs.context }}
+
+        # Get image ID from first tag
+        FIRST_TAG=$(echo "${{ inputs.tags }}" | cut -d' ' -f1 | cut -d',' -f1)
+        IMAGE_ID=$(docker inspect --format='{{.ID}}' "$FIRST_TAG" 2>/dev/null || echo "")
+        IMAGE_ID_SHORT=$(echo "$IMAGE_ID" | sed 's/sha256://' | cut -c1-12)
+
+        echo "image-id=${IMAGE_ID_SHORT}" >> $GITHUB_OUTPUT
+        echo "image-digest=${IMAGE_ID}" >> $GITHUB_OUTPUT
