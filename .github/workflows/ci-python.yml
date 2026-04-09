@@ -8,16 +8,6 @@ on:
         required: false
         type: string
         default: "ubuntu-latest"
-      python-version:
-        description: "Default Python version for non-matrix jobs"
-        required: false
-        type: string
-        default: "3.11"
-      python-versions:
-        description: 'Python versions for matrix testing (JSON array, e.g., ''["3.9", "3.10", "3.11"]'')'
-        required: false
-        type: string
-        default: '["3.11"]'
       lint-enabled:
         description: "Enable linting"
         required: false
@@ -75,17 +65,32 @@ on:
         default: ""
 
 jobs:
+  extract-versions:
+    name: Extract Python Versions
+    runs-on: ${{ inputs.runner }}
+    outputs:
+      python-versions: ${{ steps.extract.outputs.versions-json }}
+      min-version: ${{ steps.extract.outputs.min-version }}
+      max-version: ${{ steps.extract.outputs.max-version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Extract Python versions
+        uses: m4nh/shared-cicd/actions/python/extract-python-versions@main
+        id: extract
+
   lint:
     name: Lint
     runs-on: ${{ inputs.runner }}
     if: inputs.lint-enabled
+    needs: [extract-versions]
     steps:
       - uses: actions/checkout@v4
 
       - name: Python Lint
         uses: m4nh/shared-cicd/actions/python/python-lint@main
         with:
-          python-version: ${{ inputs.python-version }}
+          python-version: ${{ needs.extract-versions.outputs.min-version }}
           linter: ${{ inputs.linter }}
           linter-args: ${{ inputs.linter-args }}
           path: ${{ inputs.lint-path }}
@@ -94,16 +99,13 @@ jobs:
     name: Test (Python ${{ matrix.python-version }})
     runs-on: ${{ inputs.runner }}
     if: inputs.tests-enabled
+    needs: extract-versions
     strategy:
       fail-fast: false
       matrix:
-        python-version: ${{ fromJson(steps.extract.outputs.versions-json)[0] != null && fromJson(steps.extract.outputs.versions-json) || fromJson(inputs.python-versions) }}
+        python-version: ${{ fromJson(needs.extract-versions.outputs.python-versions) }}
     steps:
       - uses: actions/checkout@v4
-
-      - name: Extract Python versions
-        uses: m4nh/shared-cicd/actions/python/extract-python-versions@main
-        id: extract
 
       - name: Run pytest
         uses: m4nh/shared-cicd/actions/python/run-pytest@main
@@ -114,26 +116,28 @@ jobs:
     name: Security Scan
     runs-on: ${{ inputs.runner }}
     if: inputs.security-enabled
+    needs: [extract-versions]
     steps:
       - uses: actions/checkout@v4
 
       - name: Run security scan
         uses: m4nh/shared-cicd/actions/python/run-security-scan@main
         with:
-          python-version: ${{ inputs.python-version }}
+          python-version: ${{ needs.extract-versions.outputs.min-version }}
           source-path: ${{ inputs.security-source-path }}
 
   build-wheel:
     name: Build Wheel
     runs-on: ${{ inputs.runner }}
     if: inputs.build-wheel-enabled
+    needs: [extract-versions]
     steps:
       - uses: actions/checkout@v4
 
       - name: Build wheel
         uses: m4nh/shared-cicd/actions/python/build-wheel@main
         with:
-          python-version: ${{ inputs.python-version }}
+          python-version: ${{ needs.extract-versions.outputs.min-version }}
 
   build-docker:
     name: Build Docker Image

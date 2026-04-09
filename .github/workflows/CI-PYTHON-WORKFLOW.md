@@ -60,7 +60,6 @@ jobs:
     uses: m4nh/shared-cicd/.github/workflows/ci-python.yml@main
     with:
       runner: "ubuntu-latest"
-      python-version: "3.11"
       linter: "black"
       lint-path: "src/"
       tests-enabled: true
@@ -74,10 +73,9 @@ jobs:
 
 ### General
 
-| Input            | Type   | Default         | Description                                |
-| ---------------- | ------ | --------------- | ------------------------------------------ |
-| `runner`         | string | `ubuntu-latest` | GitHub runner to use                       |
-| `python-version` | string | `3.11`          | Default Python version for non-matrix jobs |
+| Input    | Type   | Default         | Description          |
+| -------- | ------ | --------------- | -------------------- |
+| `runner` | string | `ubuntu-latest` | GitHub runner to use |
 
 ### Linting
 
@@ -190,7 +188,6 @@ jobs:
     uses: m4nh/shared-cicd/.github/workflows/ci-python.yml@main
     with:
       runner: "ubuntu-latest"
-      python-version: "3.11"
       lint-enabled: true
       linter: "ruff"
       linter-args: "--select E,W,F"
@@ -206,44 +203,30 @@ jobs:
 
 ## Workflow Structure
 
-All jobs run **in parallel** (except steps within the Test job):
+The workflow runs in this order:
 
-1. **Lint** (if enabled)
+1. **Extract Versions** (always runs first)
 
-   - Runs configured linter on specified path
-   - Uses Python 3.11
-   - Runs independently
+   - Extracts Python version range from source `pyproject.toml`
+   - Outputs: `python-versions` (array of all versions), `min-version`, `max-version`
 
-2. **Test** (if enabled)
+2. **Lint**, **Security**, **Test**, **Build Wheel**, **Build Docker** (all wait for Extract Versions)
 
-   - First extracts Python versions from `pyproject.toml`
-   - Then runs pytest on all extracted versions using matrix strategy
-   - Runs tests in parallel across multiple Python versions
-
-3. **Security** (if enabled)
-
-   - Runs pip-audit and bandit
-   - Uses Python 3.11
-   - Runs independently
-
-4. **Build Wheel** (if enabled)
-
-   - Builds Python wheel
-   - Uses Python 3.11
-   - Runs independently
-
-5. **Build Docker** (if enabled)
-   - Builds Docker image
-   - Requires `docker-tags` to be set
-   - Runs independently
+   - **Lint** (if enabled) - Uses extracted `min-version`, runs configured linter
+   - **Security** (if enabled) - Uses extracted `min-version`, runs bandit + pip-audit
+   - **Test** (if enabled) - Uses matrix with all extracted `python-versions`, runs pytest in parallel
+   - **Build Wheel** (if enabled) - Uses extracted `min-version`, builds Python wheel
+   - **Build Docker** (if enabled) - Builds Docker image with optional tags/build-args (no Python version needed)
 
 ## Prerequisites in Your Repository
 
-Your project must have:
+Your project **must have** a `pyproject.toml` with:
 
-- `pyproject.toml` with `requires-python` field (for version extraction)
-- `pyproject.toml` with test configuration (for pytest)
-- Linter configuration in `pyproject.toml` or defaults
+- `requires-python` field specifying Python version range (e.g., `>=3.9,<3.13`)
+- Test configuration (for pytest)
+- Linter configuration or use defaults
+
+All Python versions are automatically extracted from `pyproject.toml` - no manual configuration needed!
 
 Example `pyproject.toml`:
 

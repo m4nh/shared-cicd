@@ -1,6 +1,6 @@
 <mxfile host="65bd71144e">
     <diagram name="CI Python Workflow" id="diagram-1">
-        <mxGraphModel dx="1385" dy="519" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="1000" math="0" shadow="0">
+        <mxGraphModel dx="1056" dy="1704" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="1000" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
@@ -20,7 +20,7 @@
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
                 <mxCell id="start" value="🚀 Workflow Triggered" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1f5ff;strokeColor=#01579b;strokeWidth=3" parent="1" vertex="1">
-                    <mxGeometry x="550" y="120" width="200" height="60" as="geometry"/>
+                    <mxGeometry x="550" y="-10" width="200" height="60" as="geometry"/>
                 </mxCell>
                 <mxCell id="cond-lint" value="lint-enabled?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#e0f2f1;strokeColor=#004d40" parent="1" vertex="1">
                     <mxGeometry x="80" y="270" width="120" height="100" as="geometry"/>
@@ -42,7 +42,7 @@
                         </Array>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="job-lint" value="🔍 LINT JOB&#xa;Python: 3.11&#xa;&#xa;- Checkout&#xa;- Run linter" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8e6c9;strokeColor=#2e7d32;strokeWidth=2" parent="1" vertex="1">
+                <mxCell id="job-lint" value="🔍 LINT JOB&lt;br&gt;&lt;br&gt;- Checkout&lt;br&gt;- Run linter" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8e6c9;strokeColor=#2e7d32;strokeWidth=2" parent="1" vertex="1">
                     <mxGeometry x="40" y="460" width="200" height="100" as="geometry"/>
                 </mxCell>
                 <mxCell id="arrow-lint-yes" value="YES" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2" parent="1" source="cond-lint" target="job-lint" edge="1">
@@ -69,10 +69,10 @@
                         </Array>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="job-test" value="✅ TEST JOBS (MATRIX)&#xa;All Python versions&#xa;e.g. 3.10, 3.11, 3.12&#xa;&#xa;- Checkout&#xa;- Setup Python&#xa;- Run pytest" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8e6c9;strokeColor=#2e7d32;strokeWidth=2" parent="1" vertex="1">
-                    <mxGeometry x="270" y="600" width="200" height="100" as="geometry"/>
+                <mxCell id="job-test" value="✅ TEST JOBS (MATRIX)&lt;br&gt;&lt;br&gt;- Checkout&lt;br&gt;- Setup Python&lt;br&gt;- Run pytest" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8e6c9;strokeColor=#2e7d32;strokeWidth=2" parent="1" vertex="1">
+                    <mxGeometry x="270" y="460" width="200" height="100" as="geometry"/>
                 </mxCell>
-                <mxCell id="arrow-test-yes" value="YES" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="cond-test" target="16" edge="1">
+                <mxCell id="arrow-test-yes" value="YES" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;" parent="1" source="cond-test" target="job-test" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <mxPoint x="370" y="370" as="sourcePoint"/>
                         <mxPoint x="380" y="480" as="targetPoint"/>
@@ -96,7 +96,7 @@
                         </Array>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="job-sec" value="🔐 SECURITY JOB&#xa;Python: 3.11&#xa;&#xa;- Checkout&#xa;- Run bandit&#xa;- Run pip-audit" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8e6c9;strokeColor=#2e7d32;strokeWidth=2" parent="1" vertex="1">
+                <mxCell id="job-sec" value="🔐 SECURITY JOB&lt;br&gt;&lt;br&gt;- Checkout&lt;br&gt;- Run bandit&lt;br&gt;- Run pip-audit" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8e6c9;strokeColor=#2e7d32;strokeWidth=2" parent="1" vertex="1">
                     <mxGeometry x="500" y="460" width="200" height="100" as="geometry"/>
                 </mxCell>
                 <mxCell id="arrow-sec-yes" value="YES" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" parent="1" source="3" target="job-sec" edge="1">
@@ -113,7 +113,7 @@
                         </Array>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="job-wheel" value="📦 BUILD WHEEL JOB&#xa;Python: 3.11&#xa;&#xa;- Checkout&#xa;- Setup Python&#xa;- Build wheel" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8e6c9;strokeColor=#2e7d32;strokeWidth=2" parent="1" vertex="1">
+                <mxCell id="job-wheel" value="📦 BUILD WHEEL JOB&lt;br&gt;&lt;br&gt;- Checkout&lt;br&gt;- Setup Python&lt;br&gt;- Build wheel" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8e6c9;strokeColor=#2e7d32;strokeWidth=2" parent="1" vertex="1">
                     <mxGeometry x="730" y="460" width="200" height="100" as="geometry"/>
                 </mxCell>
                 <mxCell id="arrow-wheel-yes" value="YES" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2" parent="1" source="cond-wheel" target="job-wheel" edge="1">
@@ -207,11 +207,44 @@
                 <mxCell id="3" value="&lt;span&gt;&lt;font style=&quot;color: light-dark(rgb(255, 255, 255), rgb(255, 255, 255));&quot;&gt;security-enabled?&lt;/font&gt;&lt;/span&gt;" style="rhombus;whiteSpace=wrap;html=1;fillColor=#e0f2f1;strokeColor:#004d40" vertex="1" parent="1">
                     <mxGeometry x="540" y="270" width="120" height="100" as="geometry"/>
                 </mxCell>
-                <mxCell id="17" style="edgeStyle=none;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="16" target="job-test">
-                    <mxGeometry relative="1" as="geometry"/>
+                <mxCell id="17" style="edgeStyle=orthogonalEdgeStyle;html=1;entryX=0.25;entryY=0;entryDx=0;entryDy=0;dashed=1;rounded=0;" edge="1" parent="1" source="16" target="job-test">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="280" y="100"/>
+                            <mxPoint x="280" y="430"/>
+                            <mxPoint x="320" y="430"/>
+                        </Array>
+                    </mxGeometry>
                 </mxCell>
-                <mxCell id="16" value="&lt;font style=&quot;&quot;&gt;&lt;span style=&quot;color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;📦 Extract Python Versions&lt;/span&gt;&lt;br style=&quot;scrollbar-color: rgb(75, 75, 75) rgb(27, 29, 30);&quot;&gt;&lt;span style=&quot;color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;(always runs)&lt;/span&gt;&lt;br style=&quot;scrollbar-color: rgb(75, 75, 75) rgb(27, 29, 30);&quot;&gt;&lt;br style=&quot;scrollbar-color: rgb(75, 75, 75) rgb(27, 29, 30);&quot;&gt;&lt;span style=&quot;color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;Outputs:&lt;/span&gt;&lt;br style=&quot;scrollbar-color: rgb(75, 75, 75) rgb(27, 29, 30);&quot;&gt;&lt;font style=&quot;color: rgb(252, 252, 252);&quot;&gt;- python-versions&lt;br style=&quot;scrollbar-color: rgb(75, 75, 75) rgb(27, 29, 30);&quot;&gt;&lt;/font&gt;&lt;span style=&quot;color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;- min-version&lt;/span&gt;&lt;br style=&quot;scrollbar-color: rgb(75, 75, 75) rgb(27, 29, 30);&quot;&gt;&lt;span style=&quot;color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;- max-version&lt;/span&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8e6c9;strokeColor=#2e7d32;strokeWidth=2" vertex="1" parent="1">
-                    <mxGeometry x="270" y="460" width="200" height="100" as="geometry"/>
+                <mxCell id="27" style="edgeStyle=orthogonalEdgeStyle;html=1;entryX=0.25;entryY=0;entryDx=0;entryDy=0;dashed=1;rounded=0;" edge="1" parent="1" source="16" target="job-wheel">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="470" y="100"/>
+                            <mxPoint x="470" y="430"/>
+                            <mxPoint x="780" y="430"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="29" style="edgeStyle=orthogonalEdgeStyle;html=1;entryX=0.75;entryY=0;entryDx=0;entryDy=0;rounded=0;dashed=1;" edge="1" parent="1" source="16" target="job-lint">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="220" y="430"/>
+                            <mxPoint x="190" y="430"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="30" style="edgeStyle=orthogonalEdgeStyle;html=1;dashed=1;strokeColor=default;rounded=0;curved=0;" edge="1" parent="1" source="16">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="1010" y="460" as="targetPoint"/>
+                        <Array as="points">
+                            <mxPoint x="960" y="100"/>
+                            <mxPoint x="960" y="420"/>
+                            <mxPoint x="1010" y="420"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="16" value="&lt;font&gt;📦 Extract Python Versions&lt;br style=&quot;scrollbar-color: rgb(75, 75, 75) rgb(27, 29, 30);&quot;&gt;&lt;br style=&quot;scrollbar-color: rgb(75, 75, 75) rgb(27, 29, 30);&quot;&gt;Outputs:&lt;br style=&quot;scrollbar-color: rgb(75, 75, 75) rgb(27, 29, 30);&quot;&gt;&lt;font&gt;- python-versions&lt;br style=&quot;scrollbar-color: rgb(75, 75, 75) rgb(27, 29, 30);&quot;&gt;&lt;/font&gt;- min-version&lt;br style=&quot;scrollbar-color: rgb(75, 75, 75) rgb(27, 29, 30);&quot;&gt;- max-version&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8e6c9;strokeColor=#2e7d32;strokeWidth=2" vertex="1" parent="1">
+                    <mxGeometry x="150" y="60" width="200" height="100" as="geometry"/>
                 </mxCell>
             </root>
         </mxGraphModel>
