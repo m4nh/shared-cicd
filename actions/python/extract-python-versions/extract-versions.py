@@ -52,6 +52,14 @@ def extract_python_versions(content: str):
             ):
                 max_version = version
 
+    # If only min_version is specified (e.g., ">=3.10"), use that version
+    if min_version and not max_version:
+        print(
+            f"Warning: No maximum Python version found in '{spec_str}'. Using minimum version only.",
+            file=sys.stderr,
+        )
+        return [min_version], min_version, max_version
+
     if not min_version or not max_version:
         print(
             f"Warning: Could not extract min/max versions from '{spec_str}'",
