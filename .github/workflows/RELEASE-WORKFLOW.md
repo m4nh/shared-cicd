@@ -36,8 +36,8 @@ jobs:
       NEXUS_PASSWORD: ${{ secrets.NEXUS_PASSWORD }}
       NEXUS_REPOSITORY_URL: ${{ secrets.NEXUS_REPOSITORY_URL }}
     with:
-      docker-image-name: "myapp"
       docker-target-repository: "myorg/myapp"
+      docker-registry: "docker.io"
 ```
 
 ### With All Options
@@ -49,8 +49,8 @@ jobs:
     with:
       runner: "ubuntu-latest"
       docker-enabled: true
-      docker-image-name: "myapp"
       docker-target-repository: "myorg/myapp"
+      docker-registry: "docker.io"
       publish-package-enabled: true
     secrets:
       DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
@@ -84,11 +84,11 @@ github-release (all complete, if released)
 
 ### Docker Configuration
 
-| Input                      | Type    | Default | Description                             |
-| -------------------------- | ------- | ------- | --------------------------------------- |
-| `docker-enabled`           | boolean | `true`  | Enable Docker image build and push      |
-| `docker-image-name`        | string  | ``      | Local Docker image name (e.g., `myapp`) |
-| `docker-target-repository` | string  | ``      | Target repository (e.g., `org/image`)   |
+| Input                      | Type    | Default     | Description                           |
+| -------------------------- | ------- | ----------- | ------------------------------------- |
+| `docker-enabled`           | boolean | `true`      | Enable Docker image build and push    |
+| `docker-target-repository` | string  | ``          | Target repository (e.g., `org/image`) |
+| `docker-registry`          | string  | `docker.io` | Docker registry URL (e.g., `ghcr.io`) |
 
 ### Package Configuration
 
@@ -134,10 +134,11 @@ github-release (all complete, if released)
 
 ### push-docker
 
-**Purpose**: Pushes Docker image to Docker Hub
+**Purpose**: Pushes Docker image to configured registry
 
-- Authenticates with Docker Hub
+- Authenticates with Docker registry
 - Tags and pushes image to target repository
+- Uses constant internal image name `release-image` before retagging
 - **Condition**: Only if `docker-enabled=true` AND `released=true`
 - **Depends on**: build-docker job
 

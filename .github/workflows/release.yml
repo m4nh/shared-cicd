@@ -13,16 +13,16 @@ on:
         required: false
         type: boolean
         default: true
-      docker-image-name:
-        description: "Local Docker image name"
-        required: false
-        type: string
-        default: ""
       docker-target-repository:
         description: "Target Docker repository (e.g., org/image)"
         required: false
         type: string
         default: ""
+      docker-registry:
+        description: "Docker registry URL (e.g., docker.io, ghcr.io)"
+        required: false
+        type: string
+        default: "docker.io"
       publish-package-enabled:
         description: "Enable package publishing to Nexus"
         required: false
@@ -108,7 +108,7 @@ jobs:
       - name: Build Docker Image
         uses: m4nh/shared-cicd/actions/docker/build-docker-image@main
         with:
-          tags: "${{ inputs.docker-image-name }}:${{ needs.release.outputs.version }}"
+          tags: "release-image:${{ needs.release.outputs.version }}"
 
   push-docker:
     name: Push Docker Image
@@ -122,10 +122,10 @@ jobs:
         with:
           docker-username: ${{ secrets.DOCKER_USERNAME }}
           docker-password: ${{ secrets.DOCKER_TOKEN }}
-          image-name: ${{ inputs.docker-image-name }}
+          image-name: release-image
           image-tag: ${{ needs.release.outputs.version }}
           target-repository: ${{ inputs.docker-target-repository }}
-          registry: docker.io
+          registry: ${{ inputs.docker-registry }}
 
   build-package:
     name: Build Package
