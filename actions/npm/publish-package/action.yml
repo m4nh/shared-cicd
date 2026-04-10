@@ -1,0 +1,48 @@
+name: "Publish NPM Package to Nexus"
+description: "Publish an NPM package to a Nexus npm repository"
+
+inputs:
+  nexus-username:
+    description: "Nexus username for authentication"
+    required: true
+  nexus-password:
+    description: "Nexus password for authentication"
+    required: true
+  repository-url:
+    description: "Nexus npm repository URL (e.g., https://nexus.example.com/repository/npm-hosted/)"
+    required: true
+  package-path:
+    description: "Path to the directory containing package.json"
+    required: false
+    default: "."
+  node-version:
+    description: "Node.js version to use"
+    required: false
+    default: "20"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Node.js ${{ inputs.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs.node-version }}
+
+    - name: Configure Nexus registry auth
+      shell: bash
+      working-directory: ${{ inputs.package-path }}
+      env:
+        REPOSITORY_URL: ${{ inputs.repository-url }}
+        NEXUS_USERNAME: ${{ inputs.nexus-username }}
+        NEXUS_PASSWORD: ${{ inputs.nexus-password }}
+      run: |
+        REGISTRY=$(echo "$REPOSITORY_URL" | sed 's|https:||')
+        echo "${REGISTRY}:username=${NEXUS_USERNAME}" >> .npmrc
+        echo "${REGISTRY}:password=$(echo -n "${NEXUS_PASSWORD}" | base64)" >> .npmrc
+        echo "${REGISTRY}:always-auth=true" >> .npmrc
+        npm config set registry "$REPOSITORY_URL"
+
+    - name: Publish to Nexus
+      shell: bash
+      working-directory: ${{ inputs.package-path }}
+      run: npm publish --registry ${{ inputs.repository-url }}

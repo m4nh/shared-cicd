@@ -1,0 +1,163 @@
+name: Release - Svelte
+
+on:
+  workflow_call:
+    inputs:
+      runner:
+        description: "Runner to use"
+        required: false
+        type: string
+        default: "ubuntu-latest"
+      node-version:
+        description: "Node.js version to use"
+        required: false
+        type: string
+        default: "20"
+      docker-enabled:
+        description: "Enable Docker image build and push"
+        required: false
+        type: boolean
+        default: true
+      docker-target-repository:
+        description: "Target Docker repository (e.g., org/image)"
+        required: false
+        type: string
+        default: ""
+      docker-registry:
+        description: "Docker registry URL (e.g., docker.io, ghcr.io)"
+        required: false
+        type: string
+        default: "docker.io"
+      docker-dockerfile:
+        description: "Path to Dockerfile (e.g., Dockerfile)"
+        required: false
+        type: string
+        default: "Dockerfile"
+      docker-context:
+        description: "Docker build context directory"
+        required: false
+        type: string
+        default: "."
+      docker-build-args:
+        description: "Docker build arguments (space-separated, e.g., '--build-arg VERSION=1.0.0 --build-arg ENV=prod')"
+        required: false
+        type: string
+        default: ""
+      publish-package-enabled:
+        description: "Enable package publishing to Nexus"
+        required: false
+        type: boolean
+        default: true
+    secrets:
+      DOCKER_USERNAME:
+        description: "Docker registry username"
+        required: false
+      DOCKER_PASSWORD:
+        description: "Docker registry password or token"
+        required: false
+      NEXUS_USERNAME:
+        description: "Nexus username"
+        required: false
+      NEXUS_PASSWORD:
+        description: "Nexus password"
+        required: false
+      NEXUS_REPOSITORY_URL:
+        description: "Nexus repository URL"
+        required: false
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Create Tag and GitHub Release
+    runs-on: ${{ inputs.runner }}
+    permissions:
+      contents: write
+    outputs:
+      released: ${{ steps.semrel.outputs.new_release_published }}
+      version: ${{ steps.semrel.outputs.new_release_version }}
+      tag: ${{ steps.semrel.outputs.new_release_git_tag }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Node.js ${{ inputs.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+
+      - name: Semantic Release
+        id: semrel
+        uses: cycjimmy/semantic-release-action@v4
+        with:
+          extra_plugins: |
+            @semantic-release/commit-analyzer
+            @semantic-release/release-notes-generator
+            @semantic-release/github
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  docker:
+    name: Build and Push Docker Image
+    runs-on: ${{ inputs.runner }}
+    needs: release
+    if: inputs.docker-enabled && needs.release.outputs.released == 'true'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build Docker Image
+        uses: m4nh/shared-cicd/actions/docker/build-docker-image@main
+        with:
+          dockerfile: ${{ inputs.docker-dockerfile }}
+          context: ${{ inputs.docker-context }}
+          tags: "release-image:${{ needs.release.outputs.version }}"
+          build-args: ${{ inputs.docker-build-args }}
+
+      - name: Push Docker Image
+        uses: m4nh/shared-cicd/actions/docker/push-docker@main
+        with:
+          docker-username: ${{ secrets.DOCKER_USERNAME }}
+          docker-password: ${{ secrets.DOCKER_PASSWORD }}
+          image-name: release-image
+          image-tag: ${{ needs.release.outputs.version }}
+          target-repository: ${{ inputs.docker-target-repository }}
+          registry: ${{ inputs.docker-registry }}
+
+  build-and-publish-package:
+    name: Build and Publish Package
+    runs-on: ${{ inputs.runner }}
+    needs: release
+    if: inputs.publish-package-enabled && needs.release.outputs.released == 'true'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js ${{ inputs.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Stamp release version into package.json
+        run: npm version ${{ needs.release.outputs.version }} --no-git-tag-version
+
+      - name: Build
+        run: npm run build
+
+      - name: Publish Package
+        uses: m4nh/shared-cicd/actions/npm/publish-package@main
+        with:
+          nexus-username: ${{ secrets.NEXUS_USERNAME }}
+          nexus-password: ${{ secrets.NEXUS_PASSWORD }}
+          repository-url: ${{ secrets.NEXUS_REPOSITORY_URL }}

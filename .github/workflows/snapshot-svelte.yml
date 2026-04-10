@@ -1,0 +1,153 @@
+name: Snapshot - Svelte
+
+on:
+  workflow_call:
+    inputs:
+      runner:
+        required: false
+        type: string
+        default: "ubuntu-latest"
+      version-tag-prefix:
+        required: false
+        type: string
+        default: "v"
+      node-version:
+        required: false
+        type: string
+        default: "20"
+      docker-enabled:
+        required: false
+        type: boolean
+        default: true
+      docker-target-repository:
+        required: false
+        type: string
+        default: ""
+      docker-registry:
+        required: false
+        type: string
+        default: "docker.io"
+      docker-dockerfile:
+        required: false
+        type: string
+        default: "Dockerfile"
+      docker-context:
+        required: false
+        type: string
+        default: "."
+      docker-build-args:
+        required: false
+        type: string
+        default: ""
+      publish-package-enabled:
+        required: false
+        type: boolean
+        default: true
+    secrets:
+      DOCKER_USERNAME:
+        required: false
+      DOCKER_PASSWORD:
+        required: false
+      NEXUS_USERNAME:
+        required: false
+      NEXUS_PASSWORD:
+        required: false
+      NEXUS_REPOSITORY_URL:
+        required: false
+
+concurrency:
+  group: develop
+  cancel-in-progress: true
+
+jobs:
+  compute-version:
+    name: Compute Version
+    runs-on: ${{ inputs.runner }}
+    outputs:
+      version: ${{ steps.version.outputs.VERSION }}
+      semver-version: ${{ steps.semver.outputs.SEMVER_VERSION }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract current version from VCS
+        id: version
+        run: |
+          PREFIX="${{ inputs.version-tag-prefix }}"
+          TAG=$(git tag -l "${PREFIX}*" --sort=-v:refname | grep -E "^${PREFIX}[0-9]+\.[0-9]+\.[0-9]+$" | head -n 1 || true)
+          if [ -z "$TAG" ]; then
+            echo "::error::No release tags found with prefix '${PREFIX}'"
+            exit 1
+          fi
+          VERSION="${TAG#$PREFIX}"
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Compute semver dev version
+        id: semver
+        run: |
+          PREFIX="${{ inputs.version-tag-prefix }}"
+          VERSION="${{ steps.version.outputs.VERSION }}"
+          BUILD=$(git rev-list "${PREFIX}${VERSION}"..HEAD --count)
+          echo "SEMVER_VERSION=${VERSION}-dev.${BUILD}" >> $GITHUB_OUTPUT
+
+  docker:
+    name: Build and Push Docker Image
+    runs-on: ${{ inputs.runner }}
+    needs: compute-version
+    if: inputs.docker-enabled
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build Docker Image
+        uses: m4nh/shared-cicd/actions/docker/build-docker-image@main
+        with:
+          dockerfile: ${{ inputs.docker-dockerfile }}
+          context: ${{ inputs.docker-context }}
+          tags: "dev-image:${{ needs.compute-version.outputs.semver-version }}"
+          build-args: ${{ inputs.docker-build-args }}
+
+      - name: Push Docker Image
+        uses: m4nh/shared-cicd/actions/docker/push-docker@main
+        with:
+          docker-username: ${{ secrets.DOCKER_USERNAME }}
+          docker-password: ${{ secrets.DOCKER_PASSWORD }}
+          image-name: dev-image
+          image-tag: ${{ needs.compute-version.outputs.semver-version }}
+          target-repository: ${{ inputs.docker-target-repository }}
+          registry: ${{ inputs.docker-registry }}
+
+  build-and-publish-package:
+    name: Build and Publish Package
+    runs-on: ${{ inputs.runner }}
+    needs: compute-version
+    if: inputs.publish-package-enabled
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js ${{ inputs.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Stamp dev version into package.json
+        run: npm version ${{ needs.compute-version.outputs.semver-version }} --no-git-tag-version
+
+      - name: Build
+        run: npm run build
+
+      - name: Publish Package
+        uses: m4nh/shared-cicd/actions/npm/publish-package@main
+        with:
+          nexus-username: ${{ secrets.NEXUS_USERNAME }}
+          nexus-password: ${{ secrets.NEXUS_PASSWORD }}
+          repository-url: ${{ secrets.NEXUS_REPOSITORY_URL }}
