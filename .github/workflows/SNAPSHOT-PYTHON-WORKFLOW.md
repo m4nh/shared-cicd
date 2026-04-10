@@ -1,27 +1,27 @@
 # Snapshot Workflow - Python
 
-A reusable GitHub Actions workflow that orchestrates development builds on the `develop` branch: creating a versioned dev tag, building and pushing a Docker image, and publishing the Python package to Nexus.
+A reusable GitHub Actions workflow that orchestrates development builds on the `develop` branch: computing a dev version from git tags, building and pushing a Docker image, and publishing the Python package to Nexus.
 
 ## Overview
 
 This workflow automates the full dev-build process:
 
-- **Dev Tagging**: Extracts the latest release version from VCS and creates an incremental dev tag (e.g., `develop/1.2.3.4`)
+- **Version Computation**: Extracts the latest release version from VCS and computes an incremental PEP 440 dev version (e.g., `1.2.3.dev4`)
 - **Docker Build & Push**: Builds and pushes a Docker image tagged with the PEP 440 dev version
 - **Package Build & Publish**: Builds a Python wheel at the PEP 440 dev version and publishes it to Nexus
 
-## Tag and Version Scheme
+## Version Scheme
 
-Given a latest release tag `v1.2.3` and a `tag-prefix` of `develop`:
+Given a latest release tag `v1.2.3` and a `version-tag-prefix` of `v`:
 
-| Artifact        | Format                                | Example                  |
-| --------------- | ------------------------------------- | ------------------------ |
-| Git tag         | `{tag-prefix}/{base-version}.{build}` | `develop/1.2.3.4`        |
-| PEP 440 version | `{base-version}.dev{build}`           | `1.2.3.dev4`             |
-| Docker image    | tagged with PEP 440 version           | `org/image:1.2.3.dev4`   |
-| Wheel filename  | uses PEP 440 version                  | `myapp-1.2.3.dev4-*.whl` |
+| Artifact        | Format                      | Example                  |
+| --------------- | --------------------------- | ------------------------ |
+| Release tag     | `{prefix}{base-version}`    | `v1.2.3`                 |
+| PEP 440 version | `{base-version}.dev{build}` | `1.2.3.dev4`             |
+| Docker image    | tagged with PEP 440 version | `org/image:1.2.3.dev4`   |
+| Wheel filename  | uses PEP 440 version        | `myapp-1.2.3.dev4-*.whl` |
 
-The build number auto-increments by counting existing dev tags for that base version.
+The build number is computed by counting commits since the latest release tag (e.g., 4 commits after `v1.2.3` → `1.2.3.dev4`).
 
 ## Using This Workflow
 
@@ -58,7 +58,6 @@ jobs:
     uses: m4nh/shared-cicd/.github/workflows/develop-python.yml@main
     with:
       runner: "ubuntu-latest"
-      tag-prefix: "develop"
       version-tag-prefix: "v"
       docker-enabled: true
       docker-target-repository: "myorg/myapp"
@@ -81,13 +80,13 @@ jobs:
 start
   │
   ▼
-create-tag
+compute-version (extract version from tags, compute PEP 440 dev version)
   │
-  ├──► docker-enabled? ──YES──► docker (build + push, same runner)
+  ├──► docker-enabled? ──YES──► docker (build + push)
   │         └──NO──► skipped
   │
   └──► publish-enabled? ──YES──► build-and-publish-package
-             └──NO──► skipped       (extracts python versions internally)
+             └──NO──► skipped
 ```
 
 ## Inputs
@@ -97,7 +96,6 @@ create-tag
 | Input                | Type   | Default         | Description                                                          |
 | -------------------- | ------ | --------------- | -------------------------------------------------------------------- |
 | `runner`             | string | `ubuntu-latest` | GitHub runner to use                                                 |
-| `tag-prefix`         | string | `develop`       | Prefix for dev tags (e.g., `develop` → `develop/1.2.3.4`)            |
 | `version-tag-prefix` | string | `v`             | Prefix used on release tags to extract base version (e.g., `v1.2.3`) |
 
 ### Docker Configuration
@@ -130,42 +128,42 @@ create-tag
 
 ## Jobs
 
-### create-tag
+### compute-version
 
-**Purpose**: Computes and pushes the next dev tag for this develop build
+**Purpose**: Computes the PEP 440 dev version for this build
 
 - Reads the latest release tag matching `{version-tag-prefix}X.Y.Z` from git
-- Counts existing dev tags for that version to determine the next build number
-- Creates and pushes a tag like `develop/1.2.3.4`
-- Computes the PEP 440 version (`1.2.3.dev4`) used by all downstream jobs
-- **Outputs**: `tag`, `version`, `build`, `pep440-version`
+- Counts commits since that tag to determine the build number
+- Computes the PEP 440 dev version (e.g., `1.2.3.dev4`) used by all downstream jobs
+- Does NOT create or push any git tags
+- **Outputs**: `version`, `pep440-version`
 - **Depends on**: nothing (runs first)
 
 ### docker
 
-**Purpose**: Builds and pushes the Docker image to configured registry in a single job
+**Purpose**: Builds and pushes the Docker image to configured registry
 
 - Builds Docker image with `SETUPTOOLS_SCM_PRETEND_VERSION` set to the PEP 440 version
 - Tags image with the PEP 440 version (e.g., `org/image:1.2.3.dev4`)
 - Build and push happen on the **same runner** to avoid "image not found" errors
 - **Condition**: Only if `docker-enabled=true`
-- **Depends on**: create-tag
+- **Depends on**: compute-version
 
 ### build-and-publish-package
 
-**Purpose**: Builds a Python wheel and publishes it to Nexus in a single job
+**Purpose**: Builds a Python wheel and publishes it to Nexus
 
 - Extracts supported Python versions from `pyproject.toml`
 - Builds wheel at the PEP 440 dev version (e.g., `1.2.3.dev4`) using the minimum supported Python version
 - Publishes directly to Nexus (no artifact upload/download needed)
 - **Condition**: Only if `publish-package-enabled=true`
-- **Depends on**: create-tag
+- **Depends on**: compute-version
 
 ## Required Files
 
 - `pyproject.toml`: Must contain `requires-python` for version extraction and build configuration
 - `Dockerfile`: For Docker image builds (if `docker-enabled=true`)
-- At least one release tag matching `{version-tag-prefix}X.Y.Z` must exist in the repository
+- At least one release tag matching `{version-tag-prefix}X.Y.Z` pattern must exist in the repository (e.g., `v1.2.3`)
 
 ## Concurrency
 
@@ -197,30 +195,29 @@ ENV SETUPTOOLS_SCM_PRETEND_VERSION=${SETUPTOOLS_SCM_PRETEND_VERSION}
 ## Example Flow
 
 ```
-Push commit to develop branch
+Push commit to develop branch (e.g., 4 commits after v1.2.3)
     ↓
 Trigger workflow
     ↓
-1a. Extract Python versions (from pyproject.toml)      [parallel]
-1b. Create dev tag                                     [parallel]
-    - Latest release tag found: v1.2.3
-    - Existing dev tags for 1.2.3: develop/1.2.3.1, develop/1.2.3.2, develop/1.2.3.3
-    - New tag: develop/1.2.3.4
-    - PEP 440 version: 1.2.3.dev4
+Compute version:
+  - Latest release tag found: v1.2.3
+  - Commits since v1.2.3: 4
+  - PEP 440 version: 1.2.3.dev4
     ↓
-2a. Build Docker image (1.2.3.dev4) → Push             [if docker-enabled]
-2b. Build wheel (1.2.3.dev4) → Publish to Nexus        [if publish-package-enabled]
+2a. Build Docker image (1.2.3.dev4) → Push            [if docker-enabled]
+2b. Build wheel (1.2.3.dev4) → Publish to Nexus       [if publish-package-enabled]
     ↓
 Done ✅
 ```
 
 ## Notes
 
-- **No release needed**: This workflow does not use semantic-release. It derives the version directly from existing release tags
-- **Auto-incrementing build numbers**: The build number is global per base-version — it counts ALL dev tags for that version regardless of branch (useful if multiple dev branches share the same base)
+- **No tag creation**: This workflow computes the PEP 440 version from existing release tags but does NOT create new git tags
+- **Build number from commits**: The dev build number counts commits since the latest release tag (not previous dev tags)
 - **PEP 440 compliance**: The `1.2.3.dev4` format is recognized by pip, twine, and PyPI-compatible registries as a pre-release
 - **Concurrency safety**: `cancel-in-progress: true` means only the latest push gets built, avoiding stale dev builds piling up
 - **Docker version injection**: `SETUPTOOLS_SCM_PRETEND_VERSION` is automatically prepended to build-args so the image always carries the correct version
+- **No release tags created**: If you need to create a release tag, use the [Release Workflow](RELEASE-PYTHON-WORKFLOW.md)
 
 ## Security Best Practices
 
