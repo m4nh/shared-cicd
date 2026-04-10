@@ -141,22 +141,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Node.js ${{ inputs.node-version }}
-        uses: actions/setup-node@v4
+      - name: Build
+        uses: m4nh/shared-cicd/actions/yarn/build-package@main
         with:
           node-version: ${{ inputs.node-version }}
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Stamp release version into package.json
-        run: npm version ${{ needs.release.outputs.version }} --no-git-tag-version
-
-      - name: Build
-        run: npm run build
+          version: ${{ needs.release.outputs.version }}
 
       - name: Publish Package
-        uses: m4nh/shared-cicd/actions/npm/publish-package@main
+        uses: m4nh/shared-cicd/actions/yarn/publish-package@main
         with:
           nexus-username: ${{ secrets.NEXUS_USERNAME }}
           nexus-password: ${{ secrets.NEXUS_PASSWORD }}
