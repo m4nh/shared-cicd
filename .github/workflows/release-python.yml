@@ -94,22 +94,6 @@ jobs:
           push: "true"
           vcs_release: "true"
 
-  extract-versions:
-    name: Extract Python Versions
-    runs-on: ${{ inputs.runner }}
-    outputs:
-      python-versions: ${{ steps.extract.outputs.versions-json }}
-      min-version: ${{ steps.extract.outputs.min-version }}
-      max-version: ${{ steps.extract.outputs.max-version }}
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Extract Python Versions
-        uses: m4nh/shared-cicd/actions/python/extract-python-versions@main
-        id: extract
-
   docker:
     name: Build and Push Docker Image
     runs-on: ${{ inputs.runner }}
@@ -138,40 +122,25 @@ jobs:
           target-repository: ${{ inputs.docker-target-repository }}
           registry: ${{ inputs.docker-registry }}
 
-  build-package:
-    name: Build Package
+  build-and-publish-package:
+    name: Build and Publish Package
     runs-on: ${{ inputs.runner }}
-    needs: [release, extract-versions]
-    if: needs.release.outputs.released == 'true'
+    needs: release
+    if: inputs.publish-package-enabled && needs.release.outputs.released == 'true'
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Extract Python Versions
+        uses: m4nh/shared-cicd/actions/python/extract-python-versions@main
+        id: extract
+
       - name: Build Wheel
         uses: m4nh/shared-cicd/actions/python/build-wheel@main
         with:
-          python-version: ${{ needs.extract-versions.outputs.min-version }}
+          python-version: ${{ steps.extract.outputs.min-version }}
           version: ${{ needs.release.outputs.version }}
-
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: dist
-          path: dist/
-
-  publish-package:
-    name: Publish Package to Nexus
-    runs-on: ${{ inputs.runner }}
-    needs: [build-package, release]
-    if: inputs.publish-package-enabled && needs.release.outputs.released == 'true'
-
-    steps:
-      - name: Download Artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: dist
-          path: dist/
 
       - name: Publish Package
         uses: m4nh/shared-cicd/actions/python/publish-package@main
@@ -180,26 +149,3 @@ jobs:
           nexus-password: ${{ secrets.NEXUS_PASSWORD }}
           wheel-path: dist/*
           repository-url: ${{ secrets.NEXUS_REPOSITORY_URL }}
-
-  github-release:
-    name: Create GitHub Release with Artifacts
-    runs-on: ${{ inputs.runner }}
-    needs: [release, build-package]
-    if: needs.release.outputs.released == 'true'
-    permissions:
-      contents: write
-
-    steps:
-      - name: Download Artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: dist
-          path: dist/
-
-      - name: Upload Release Assets
-        uses: softprops/action-gh-release@v2
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          tag_name: ${{ needs.release.outputs.tag }}
-          files: dist/*
-          generate_release_notes: true

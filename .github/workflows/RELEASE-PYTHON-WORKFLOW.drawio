@@ -1,6 +1,6 @@
 <mxfile host="65bd71144e">
     <diagram name="Release Workflow" id="diagram-1">
-        <mxGraphModel dx="945" dy="447" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1200" math="0" shadow="0">
+        <mxGraphModel dx="1137" dy="757" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1200" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
@@ -13,23 +13,10 @@
                 <mxCell id="job-release" value="📝 RELEASE&lt;br&gt;&lt;br&gt;- Checkout&lt;br&gt;- Semantic Release&lt;br&gt;- Create tag &amp; release" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8e6c9;strokeColor=#2e7d32;strokeWidth=2" parent="1" vertex="1">
                     <mxGeometry x="600" y="100" width="300" height="120" as="geometry"/>
                 </mxCell>
-                <mxCell id="edge-start-extract" style="edgeStyle=orthogonalEdgeStyle;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;rounded=0;curved=0;" parent="1" source="start" target="2" edge="1">
-                    <mxGeometry relative="1" as="geometry">
-                        <mxPoint x="1190" y="99.99999999999989" as="targetPoint"/>
-                    </mxGeometry>
-                </mxCell>
                 <mxCell id="edge-release-decision" style="edgeStyle=orthogonalEdgeStyle;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="job-release" target="cond-released" edge="1">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="6" style="edgeStyle=orthogonalEdgeStyle;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;rounded=0;curved=0;" edge="1" parent="1" source="cond-released" target="job-github-release">
-                    <mxGeometry relative="1" as="geometry">
-                        <Array as="points">
-                            <mxPoint x="750" y="710"/>
-                            <mxPoint x="650" y="710"/>
-                        </Array>
-                    </mxGeometry>
-                </mxCell>
-                <mxCell id="12" style="edgeStyle=orthogonalEdgeStyle;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;rounded=0;curved=0;" edge="1" parent="1" source="cond-released" target="11">
+                <mxCell id="12" style="edgeStyle=orthogonalEdgeStyle;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;rounded=0;curved=0;" parent="1" source="cond-released" target="11" edge="1">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
                 <mxCell id="cond-released" value="released?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#e0f2f1;strokeColor=#004d40;fontSize=12" parent="1" vertex="1">
@@ -38,57 +25,27 @@
                 <mxCell id="label-yes1" value="YES" style="text;html=1;fontSize=11;fontStyle=bold;fillColor=none;strokeColor=none;" parent="1" vertex="1">
                     <mxGeometry x="600" y="310" width="50" height="20" as="geometry"/>
                 </mxCell>
-                <mxCell id="job-docker-build" value="🐳 BUILD DOCKER&lt;br&gt;&lt;br&gt;- Checkout&lt;br&gt;- Build Docker image" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8e6c9;strokeColor=#2e7d32;strokeWidth=2" parent="1" vertex="1">
+                <mxCell id="job-docker-build" value="🐳 BUILD AND PUSH DOCKER&lt;br&gt;&lt;br&gt;- Checkout&lt;br&gt;- Build Docker image&lt;div&gt;&lt;span&gt;&lt;font style=&quot;color: light-dark(rgb(255, 255, 255), rgb(255, 255, 255));&quot;&gt;- Push Docker image&lt;/font&gt;&lt;/span&gt;&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8e6c9;strokeColor=#2e7d32;strokeWidth=2" parent="1" vertex="1">
                     <mxGeometry x="250" y="552" width="300" height="120" as="geometry"/>
                 </mxCell>
-                <mxCell id="edge-release-package" style="edgeStyle=orthogonalEdgeStyle;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;rounded=0;curved=0;" parent="1" source="cond-released" target="job-package-build" edge="1">
+                <mxCell id="edge-release-package" style="edgeStyle=orthogonalEdgeStyle;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;rounded=0;curved=0;" parent="1" source="cond-released" target="19" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <Array as="points">
                             <mxPoint x="1050" y="330"/>
-                            <mxPoint x="1050" y="420"/>
                         </Array>
+                        <mxPoint x="1050" y="420" as="targetPoint"/>
                     </mxGeometry>
                 </mxCell>
                 <mxCell id="label-yes2" value="YES" style="text;html=1;fontSize=11;fontStyle=bold;fillColor=none;strokeColor=none;" parent="1" vertex="1">
                     <mxGeometry x="1050" y="310" width="50" height="20" as="geometry"/>
                 </mxCell>
-                <mxCell id="5" style="edgeStyle=orthogonalEdgeStyle;html=1;entryX=0.75;entryY=0;entryDx=0;entryDy=0;rounded=0;" edge="1" parent="1" source="job-package-build" target="job-github-release">
+                <mxCell id="job-package-publish" value="📡 BUILD AND PUBLISH PACKAGE&lt;br&gt;&lt;br&gt;- Download artifacts&lt;br&gt;- Upload to Nexus" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8e6c9;strokeColor=#2e7d32;strokeWidth=2" parent="1" vertex="1">
+                    <mxGeometry x="900" y="550" width="300" height="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="edge-no-release" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#d32f2f;rounded=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" parent="1" source="cond-released" target="end-no-release" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <Array as="points">
-                            <mxPoint x="860" y="480"/>
-                            <mxPoint x="860" y="730"/>
-                            <mxPoint x="725" y="730"/>
-                        </Array>
-                    </mxGeometry>
-                </mxCell>
-                <mxCell id="20" style="edgeStyle=none;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="job-package-build" target="19">
-                    <mxGeometry relative="1" as="geometry"/>
-                </mxCell>
-                <mxCell id="job-package-build" value="📦 BUILD PACKAGE&lt;br&gt;&lt;br&gt;- Checkout&lt;br&gt;- Build wheel" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8e6c9;strokeColor=#2e7d32;strokeWidth=2" parent="1" vertex="1">
-                    <mxGeometry x="900" y="420" width="300" height="120" as="geometry"/>
-                </mxCell>
-                <mxCell id="edge-docker-build-push" style="edgeStyle=orthogonalEdgeStyle;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="job-docker-build" target="job-docker-push" edge="1">
-                    <mxGeometry relative="1" as="geometry"/>
-                </mxCell>
-                <mxCell id="job-docker-push" value="📤 PUSH DOCKER&lt;br&gt;&lt;br&gt;- Login Docker Hub&lt;br&gt;- Push image" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8e6c9;strokeColor=#2e7d32;strokeWidth=2" parent="1" vertex="1">
-                    <mxGeometry x="250" y="732" width="300" height="120" as="geometry"/>
-                </mxCell>
-                <mxCell id="job-package-publish" value="📡 PUBLISH PACKAGE&lt;br&gt;&lt;br&gt;- Download artifacts&lt;br&gt;- Upload to Nexus" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8e6c9;strokeColor=#2e7d32;strokeWidth=2" parent="1" vertex="1">
-                    <mxGeometry x="900" y="750" width="300" height="120" as="geometry"/>
-                </mxCell>
-                <mxCell id="job-github-release" value="🎉 GITHUB RELEASE&lt;br&gt;&lt;br&gt;- Download artifacts&lt;br&gt;- Create release with files" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8e6c9;strokeColor=#2e7d32;strokeWidth=2" parent="1" vertex="1">
-                    <mxGeometry x="500" y="900" width="300" height="120" as="geometry"/>
-                </mxCell>
-                <mxCell id="edge-end" style="edgeStyle=none;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="job-github-release" target="end" edge="1">
-                    <mxGeometry relative="1" as="geometry"/>
-                </mxCell>
-                <mxCell id="end" value="✅ Release Complete" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8e6c9;strokeColor=#2e7d32;strokeWidth=3" parent="1" vertex="1">
-                    <mxGeometry x="550" y="1070" width="200" height="60" as="geometry"/>
-                </mxCell>
-                <mxCell id="edge-no-release" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#d32f2f;rounded=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="cond-released" target="end-no-release" edge="1">
-                    <mxGeometry relative="1" as="geometry">
-                        <Array as="points">
-                            <mxPoint x="1230" y="310"/>
+                            <mxPoint x="1180" y="310"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
@@ -96,62 +53,46 @@
                     <mxGeometry x="900" y="290" width="50" height="20" as="geometry"/>
                 </mxCell>
                 <mxCell id="end-no-release" value="⏭ Skipped (no changes)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffccbc;strokeColor=#d84315;strokeWidth=2" parent="1" vertex="1">
-                    <mxGeometry x="1130" y="1070" width="200" height="60" as="geometry"/>
+                    <mxGeometry x="1080" y="140" width="200" height="60" as="geometry"/>
                 </mxCell>
-                <mxCell id="3" style="edgeStyle=orthogonalEdgeStyle;html=1;rounded=0;curved=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" parent="1" source="2" target="job-package-build" edge="1">
-                    <mxGeometry relative="1" as="geometry">
-                        <Array as="points">
-                            <mxPoint x="1240" y="480"/>
-                        </Array>
-                    </mxGeometry>
-                </mxCell>
-                <mxCell id="2" value="&lt;font&gt;📦 Extract Python Versions&lt;br style=&quot;scrollbar-color: rgb(75, 75, 75) rgb(27, 29, 30);&quot;&gt;&lt;br style=&quot;scrollbar-color: rgb(75, 75, 75) rgb(27, 29, 30);&quot;&gt;Outputs:&lt;br style=&quot;scrollbar-color: rgb(75, 75, 75) rgb(27, 29, 30);&quot;&gt;&lt;font&gt;- python-versions&lt;br style=&quot;scrollbar-color: rgb(75, 75, 75) rgb(27, 29, 30);&quot;&gt;&lt;/font&gt;- min-version&lt;br style=&quot;scrollbar-color: rgb(75, 75, 75) rgb(27, 29, 30);&quot;&gt;- max-version&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8e6c9;strokeColor=#2e7d32;strokeWidth=2" parent="1" vertex="1">
-                    <mxGeometry x="1100" y="90" width="280" height="120" as="geometry"/>
-                </mxCell>
-                <mxCell id="7" value="YES" style="text;html=1;fontSize=11;fontStyle=bold;fillColor=none;strokeColor=none;" vertex="1" parent="1">
+                <mxCell id="7" value="YES" style="text;html=1;fontSize=11;fontStyle=bold;fillColor=none;strokeColor=none;" parent="1" vertex="1">
                     <mxGeometry x="760" y="390" width="50" height="20" as="geometry"/>
                 </mxCell>
-                <mxCell id="9" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;dashed=1;" vertex="1" parent="1">
-                    <mxGeometry x="210" y="530" width="390" height="352" as="geometry"/>
-                </mxCell>
-                <mxCell id="10" value="Build and Push Docker" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
-                    <mxGeometry x="245" y="510" width="150" height="30" as="geometry"/>
-                </mxCell>
-                <mxCell id="14" style="edgeStyle=none;html=1;" edge="1" parent="1" source="11" target="job-docker-build">
+                <mxCell id="14" style="edgeStyle=none;html=1;" parent="1" source="11" target="job-docker-build" edge="1">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="17" style="edgeStyle=none;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="11" target="16">
+                <mxCell id="17" style="edgeStyle=none;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="11" target="16" edge="1">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="11" value="Docker Enabled" style="rhombus;whiteSpace=wrap;html=1;fillColor=#e0f2f1;strokeColor=#004d40;fontSize=12" vertex="1" parent="1">
+                <mxCell id="11" value="Docker Enabled" style="rhombus;whiteSpace=wrap;html=1;fillColor=#e0f2f1;strokeColor=#004d40;fontSize=12" parent="1" vertex="1">
                     <mxGeometry x="350" y="370" width="100" height="100" as="geometry"/>
                 </mxCell>
-                <mxCell id="15" value="YES" style="text;html=1;fontSize=11;fontStyle=bold;fillColor=none;strokeColor=none;" vertex="1" parent="1">
+                <mxCell id="15" value="YES" style="text;html=1;fontSize=11;fontStyle=bold;fillColor=none;strokeColor=none;" parent="1" vertex="1">
                     <mxGeometry x="405" y="480" width="50" height="20" as="geometry"/>
                 </mxCell>
-                <mxCell id="16" value="⏭ Skipped" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffccbc;strokeColor=#d84315;strokeWidth=2" vertex="1" parent="1">
+                <mxCell id="16" value="⏭ Skipped" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffccbc;strokeColor=#d84315;strokeWidth=2" parent="1" vertex="1">
                     <mxGeometry x="490" y="390" width="90" height="60" as="geometry"/>
                 </mxCell>
-                <mxCell id="18" value="NO" style="text;html=1;fontSize=11;fontStyle=bold;fillColor=none;strokeColor=none;" vertex="1" parent="1">
+                <mxCell id="18" value="NO" style="text;html=1;fontSize=11;fontStyle=bold;fillColor=none;strokeColor=none;" parent="1" vertex="1">
                     <mxGeometry x="455" y="400" width="50" height="20" as="geometry"/>
                 </mxCell>
-                <mxCell id="21" style="edgeStyle=none;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="19" target="job-package-publish">
+                <mxCell id="21" style="edgeStyle=none;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="19" target="job-package-publish" edge="1">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="25" style="edgeStyle=none;html=1;" edge="1" parent="1" source="19" target="24">
+                <mxCell id="25" style="edgeStyle=none;html=1;" parent="1" source="19" target="24" edge="1">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="19" value="Publish Package&lt;br&gt;Enabled" style="rhombus;whiteSpace=wrap;html=1;fillColor=#e0f2f1;strokeColor=#004d40;fontSize=12" vertex="1" parent="1">
-                    <mxGeometry x="1000" y="580" width="100" height="100" as="geometry"/>
+                <mxCell id="19" value="Publish Package&lt;br&gt;Enabled" style="rhombus;whiteSpace=wrap;html=1;fillColor=#e0f2f1;strokeColor=#004d40;fontSize=12" parent="1" vertex="1">
+                    <mxGeometry x="1000" y="380" width="100" height="100" as="geometry"/>
                 </mxCell>
-                <mxCell id="22" value="YES" style="text;html=1;fontSize=11;fontStyle=bold;fillColor=none;strokeColor=none;" vertex="1" parent="1">
-                    <mxGeometry x="1050" y="710" width="50" height="20" as="geometry"/>
+                <mxCell id="22" value="YES" style="text;html=1;fontSize=11;fontStyle=bold;fillColor=none;strokeColor=none;" parent="1" vertex="1">
+                    <mxGeometry x="1050" y="510" width="50" height="20" as="geometry"/>
                 </mxCell>
-                <mxCell id="24" value="⏭ Skipped" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffccbc;strokeColor=#d84315;strokeWidth=2" vertex="1" parent="1">
-                    <mxGeometry x="870" y="600" width="90" height="60" as="geometry"/>
+                <mxCell id="24" value="⏭ Skipped" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffccbc;strokeColor=#d84315;strokeWidth=2" parent="1" vertex="1">
+                    <mxGeometry x="870" y="400" width="90" height="60" as="geometry"/>
                 </mxCell>
-                <mxCell id="26" value="NO" style="text;html=1;fontSize=11;fontStyle=bold;fillColor=none;strokeColor=none;" vertex="1" parent="1">
-                    <mxGeometry x="980" y="610" width="50" height="20" as="geometry"/>
+                <mxCell id="26" value="NO" style="text;html=1;fontSize=11;fontStyle=bold;fillColor=none;strokeColor=none;" parent="1" vertex="1">
+                    <mxGeometry x="970" y="410" width="50" height="20" as="geometry"/>
                 </mxCell>
             </root>
         </mxGraphModel>
