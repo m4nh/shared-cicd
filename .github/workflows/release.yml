@@ -95,8 +95,8 @@ jobs:
         uses: m4nh/shared-cicd/actions/python/extract-python-versions@main
         id: extract
 
-  build-docker:
-    name: Build Docker Image
+  docker:
+    name: Build and Push Docker Image
     runs-on: ${{ inputs.runner }}
     needs: release
     if: inputs.docker-enabled && needs.release.outputs.released == 'true'
@@ -110,13 +110,6 @@ jobs:
         with:
           tags: "release-image:${{ needs.release.outputs.version }}"
 
-  push-docker:
-    name: Push Docker Image
-    runs-on: ${{ inputs.runner }}
-    needs: [release, build-docker]
-    if: inputs.docker-enabled && needs.release.outputs.released == 'true'
-
-    steps:
       - name: Push Docker Image
         uses: m4nh/shared-cicd/actions/docker/push-docker@main
         with:
@@ -167,7 +160,7 @@ jobs:
         with:
           nexus-username: ${{ secrets.NEXUS_USERNAME }}
           nexus-password: ${{ secrets.NEXUS_PASSWORD }}
-          wheel-path: dist/
+          wheel-path: dist/*
           repository-url: ${{ secrets.NEXUS_REPOSITORY_URL }}
 
   github-release:

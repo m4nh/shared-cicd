@@ -42,4 +42,4 @@ runs:
           --repository-url "$REPOSITORY_URL" \
           -u "$TWINE_USERNAME" \
           -p "$TWINE_PASSWORD" \
-          "${{ inputs.wheel-path }}"
+          ${{ inputs.wheel-path }}
