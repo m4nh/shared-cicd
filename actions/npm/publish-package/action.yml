@@ -37,12 +37,12 @@ runs:
         NEXUS_PASSWORD: ${{ inputs.nexus-password }}
       run: |
         REGISTRY=$(echo "$REPOSITORY_URL" | sed 's|https:||')
-        echo "${REGISTRY}:username=${NEXUS_USERNAME}" >> .npmrc
-        echo "${REGISTRY}:password=$(echo -n "${NEXUS_PASSWORD}" | base64)" >> .npmrc
-        echo "${REGISTRY}:always-auth=true" >> .npmrc
-        npm config set registry "$REPOSITORY_URL"
+        echo "${REGISTRY}:username=${NEXUS_USERNAME}" >> .yarnrc.yml
+        echo "${REGISTRY}:password=$(echo -n "${NEXUS_PASSWORD}" | base64)" >> .yarnrc.yml
+        echo "${REGISTRY}:always-auth=true" >> .yarnrc.yml
+        yarn config set registry "$REPOSITORY_URL"
 
     - name: Publish to Nexus
       shell: bash
       working-directory: ${{ inputs.package-path }}
-      run: npm publish --registry ${{ inputs.repository-url }}
+      run: yarn publish --non-interactive --registry ${{ inputs.repository-url }}
