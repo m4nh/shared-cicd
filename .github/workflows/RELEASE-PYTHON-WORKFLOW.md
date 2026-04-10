@@ -28,7 +28,7 @@ on:
 
 jobs:
   release:
-    uses: m4nh/shared-cicd/.github/workflows/release.yml@main
+    uses: m4nh/shared-cicd/.github/workflows/release-python.yml@main
     secrets:
       DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
       DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
@@ -45,12 +45,15 @@ jobs:
 ```yaml
 jobs:
   release:
-    uses: m4nh/shared-cicd/.github/workflows/release.yml@main
+    uses: m4nh/shared-cicd/.github/workflows/release-python.yml@main
     with:
       runner: "ubuntu-latest"
       docker-enabled: true
       docker-target-repository: "myorg/myapp"
       docker-registry: "docker.io"
+      docker-dockerfile: "Dockerfile"
+      docker-context: "."
+      docker-build-args: "--build-arg ENV=prod"
       publish-package-enabled: true
     secrets:
       DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
@@ -63,15 +66,21 @@ jobs:
 ## Workflow Diagram
 
 ```
-release (semantic version)
-    ↓
-extract-versions (parallel)
-    ↓
-build-docker → push-docker (sequential, if docker-enabled)
-    ↓
-build-package → publish-package (sequential, if publish-enabled)
-    ↓
-github-release (all complete, if released)
+release ─────────────────── extract-versions
+    │  (run in parallel)           │
+    │                              │
+    ▼ (needs: release)             │
+  docker                           │
+  (build + push, same runner)      │
+                                   │
+                    ▼ (needs: release + extract-versions)
+                 build-package
+                      │
+                      ▼ (needs: build-package)
+               publish-package (if publish-package-enabled)
+
+    ▼ (needs: release + build-package)
+github-release
 ```
 
 ## Inputs
@@ -84,11 +93,14 @@ github-release (all complete, if released)
 
 ### Docker Configuration
 
-| Input                      | Type    | Default     | Description                           |
-| -------------------------- | ------- | ----------- | ------------------------------------- |
-| `docker-enabled`           | boolean | `true`      | Enable Docker image build and push    |
-| `docker-target-repository` | string  | ``          | Target repository (e.g., `org/image`) |
-| `docker-registry`          | string  | `docker.io` | Docker registry URL (e.g., `ghcr.io`) |
+| Input                      | Type    | Default      | Description                               |
+| -------------------------- | ------- | ------------ | ----------------------------------------- |
+| `docker-enabled`           | boolean | `true`       | Enable Docker image build and push        |
+| `docker-target-repository` | string  | ``           | Target repository (e.g., `org/image`)     |
+| `docker-registry`          | string  | `docker.io`  | Docker registry URL (e.g., `ghcr.io`)     |
+| `docker-dockerfile`        | string  | `Dockerfile` | Path to Dockerfile                        |
+| `docker-context`           | string  | `.`          | Docker build context directory            |
+| `docker-build-args`        | string  | ``           | Build arguments (e.g., `--build-arg K=V`) |
 
 ### Package Configuration
 
@@ -124,23 +136,17 @@ github-release (all complete, if released)
 - Extracts supported Python versions from `pyproject.toml`
 - **Outputs**: `min-version`, `max-version`, `python-versions` (JSON array)
 
-### build-docker
+### docker
 
-**Purpose**: Builds Docker image with release version
+**Purpose**: Builds and pushes Docker image to configured registry in a single job
 
 - Builds Docker image tagged with semantic version
-- **Condition**: Only if `docker-enabled=true` AND `released=true`
-- **Depends on**: release job
-
-### push-docker
-
-**Purpose**: Pushes Docker image to configured registry
-
 - Authenticates with Docker registry
 - Tags and pushes image to target repository
 - Uses constant internal image name `release-image` before retagging
+- **Both steps run on the same runner**, so no image transfer issues
 - **Condition**: Only if `docker-enabled=true` AND `released=true`
-- **Depends on**: build-docker job
+- **Depends on**: release job
 
 ### build-package
 
@@ -170,7 +176,7 @@ github-release (all complete, if released)
 - Attaches wheel files to release
 - Auto-generates release notes from commits
 - **Condition**: Only if all jobs succeeded AND `released=true`
-- **Depends on**: release, publish-package, push-docker jobs
+- **Depends on**: release, build-package jobs (waits for artifacts from build-package)
 
 ## Required Files
 
@@ -212,16 +218,26 @@ Trigger workflow
    - No semver bump needed? → Workflow stops (skipped path)
    - New version needed? → Continue...
     ↓
-2. Extract Python versions in parallel
+2. Extract Python versions (parallel)
+    ↓ (jobs run in parallel from here)
+3a. Build Docker image v1.2.3
     ↓
-3. Build & Push Docker image (v1.2.3)
+    Push to registry
+
+3b. Build Python wheel v1.2.3 → Upload to artifacts
     ↓
-4. Build & Publish Python wheel (v1.2.3) to Nexus
+    Publish to Nexus (downloads from artifacts)
     ↓
-5. Create GitHub release v1.2.3 with wheel artifact
+4. Both complete → Create GitHub release with artifacts
     ↓
 Done ✅
 ```
+
+**Key points**:
+
+- Docker build and push happen on **same runner** (no image loss)
+- Python build and publish happen on **separate runners** (artifacts bridge them)
+- All paths must complete before github-release runs
 
 ## Security Best Practices
 
@@ -238,3 +254,5 @@ Done ✅
 - Docker Hub image is tagged with `docker.io` registry by default
 - Wheel artifacts are kept for 90 days on GitHub (configurable)
 - Release notes are auto-generated from commits using GitHub's format
+- **Docker job advantage**: Build and push happen on same runner, avoiding "image not found" errors
+- **Build/publish separation**: Allows building on one runner and publishing on another, prevents secrets exposure in artifacts

@@ -50,7 +50,7 @@ Uses all defaults:
 - Tests run on all versions from `pyproject.toml`
 - Security scanning enabled
 - Wheel building enabled
-- Docker building enabled (requires docker-tags to actually build)
+- Docker building enabled
 
 ### Custom Configuration
 
@@ -66,7 +66,6 @@ jobs:
       security-enabled: true
       build-wheel-enabled: true
       build-docker-enabled: true
-      docker-tags: "myimage:latest,myimage:${{ github.sha }}"
 ```
 
 ## Inputs
@@ -82,15 +81,17 @@ jobs:
 | Input          | Type    | Default | Description                          |
 | -------------- | ------- | ------- | ------------------------------------ |
 | `lint-enabled` | boolean | `true`  | Enable linting                       |
+| `lint-fix`     | boolean | `false` | Auto-fix issues (ruff only)          |
 | `linter`       | string  | `ruff`  | Linter (ruff, flake8, pylint, black) |
 | `linter-args`  | string  | ``      | Additional linter arguments          |
 | `lint-path`    | string  | `.`     | Path to lint                         |
 
 ### Testing
 
-| Input           | Type    | Default | Description    |
-| --------------- | ------- | ------- | -------------- |
-| `tests-enabled` | boolean | `true`  | Enable testing |
+| Input           | Type    | Default | Description                    |
+| --------------- | ------- | ------- | ------------------------------ |
+| `tests-enabled` | boolean | `true`  | Enable testing                 |
+| `pytest-args`   | string  | ``      | Additional arguments to pytest |
 
 ### Security
 
@@ -101,12 +102,13 @@ jobs:
 
 ### Building
 
-| Input                  | Type    | Default | Description            |
-| ---------------------- | ------- | ------- | ---------------------- |
-| `build-wheel-enabled`  | boolean | `true`  | Enable wheel building  |
-| `build-docker-enabled` | boolean | `true`  | Enable Docker building |
-| `docker-tags`          | string  | ``      | Docker image tags      |
-| `docker-build-args`    | string  | ``      | Docker build arguments |
+| Input                  | Type    | Default      | Description                               |
+| ---------------------- | ------- | ------------ | ----------------------------------------- |
+| `build-wheel-enabled`  | boolean | `true`       | Enable wheel building                     |
+| `build-docker-enabled` | boolean | `true`       | Enable Docker building                    |
+| `docker-dockerfile`    | string  | `Dockerfile` | Path to Dockerfile                        |
+| `docker-context`       | string  | `.`          | Docker build context directory            |
+| `docker-build-args`    | string  | ``           | Build arguments (e.g., `--build-arg K=V`) |
 
 ## Complete Examples
 
@@ -155,7 +157,8 @@ jobs:
     uses: m4nh/shared-cicd/.github/workflows/ci-python.yml@main
     with:
       build-docker-enabled: true
-      docker-tags: "ghcr.io/${{ github.repository }}:latest,ghcr.io/${{ github.repository }}:${{ github.sha }}"
+      docker-dockerfile: "Dockerfile"
+      docker-context: "."
       docker-build-args: "--build-arg VERSION=${{ github.ref_name }}"
 ```
 
@@ -197,7 +200,8 @@ jobs:
       security-source-path: "src/"
       build-wheel-enabled: true
       build-docker-enabled: true
-      docker-tags: "myapp:latest,myapp:${{ github.sha }}"
+      docker-dockerfile: "Dockerfile"
+      docker-context: "."
       docker-build-args: "--build-arg ENV=production"
 ```
 
@@ -219,7 +223,7 @@ The workflow runs as follows:
 
 3. **Build Docker** (runs independently, in parallel with others)
 
-   - **Build Docker** (if enabled and `docker-tags` provided) - Builds Docker image with optional tags/build-args (runs concurrently, no Python version needed)
+   - **Build Docker** (if enabled) - Builds Docker image with optional build-args (runs concurrently, no Python version needed)
 
 ## Prerequisites in Your Repository
 
@@ -282,7 +286,6 @@ Secrets are not needed for this workflow unless you're pushing to registries or 
 ### Docker build fails
 
 - Verify `Dockerfile` exists in repository root
-- Check `docker-tags` input is provided
 - Ensure Docker build context is correct
 
 ## Tips
