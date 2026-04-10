@@ -1,5 +1,5 @@
 name: "Publish NPM Package to Nexus"
-description: "Publish an NPM package to a Nexus npm repository"
+description: "Publish an NPM package to a Nexus npm repository using Yarn"
 
 inputs:
   nexus-username:

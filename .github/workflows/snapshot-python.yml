@@ -85,15 +85,9 @@ jobs:
 
       - name: Extract current version from VCS
         id: version
-        run: |
-          PREFIX="${{ inputs.version-tag-prefix }}"
-          TAG=$(git tag -l "${PREFIX}*" --sort=-v:refname | grep -E "^${PREFIX}[0-9]+\.[0-9]+\.[0-9]+$" | head -n 1 || true)
-          if [ -z "$TAG" ]; then
-            echo "::error::No release tags found with prefix '${PREFIX}'"
-            exit 1
-          fi
-          VERSION="${TAG#$PREFIX}"
-          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+        uses: m4nh/shared-cicd/actions/git/vcs-version@main
+        with:
+          tag-prefix: ${{ inputs.version-tag-prefix }}
 
       - name: Compute PEP 440 version
         id: pep440
