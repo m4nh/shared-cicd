@@ -31,7 +31,7 @@ jobs:
     uses: m4nh/shared-cicd/.github/workflows/release.yml@main
     secrets:
       DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-      DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
+      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
       NEXUS_USERNAME: ${{ secrets.NEXUS_USERNAME }}
       NEXUS_PASSWORD: ${{ secrets.NEXUS_PASSWORD }}
       NEXUS_REPOSITORY_URL: ${{ secrets.NEXUS_REPOSITORY_URL }}
@@ -54,7 +54,7 @@ jobs:
       publish-package-enabled: true
     secrets:
       DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-      DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
+      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
       NEXUS_USERNAME: ${{ secrets.NEXUS_USERNAME }}
       NEXUS_PASSWORD: ${{ secrets.NEXUS_PASSWORD }}
       NEXUS_REPOSITORY_URL: ${{ secrets.NEXUS_REPOSITORY_URL }}
@@ -100,8 +100,8 @@ github-release (all complete, if released)
 
 | Secret                 | Required           | Description                           |
 | ---------------------- | ------------------ | ------------------------------------- |
-| `DOCKER_USERNAME`      | If docker-enabled  | Docker Hub username                   |
-| `DOCKER_TOKEN`         | If docker-enabled  | Docker Hub token or password          |
+| `DOCKER_USERNAME`      | If docker-enabled  | Docker registry username              |
+| `DOCKER_PASSWORD`      | If docker-enabled  | Docker registry password or token     |
 | `NEXUS_USERNAME`       | If publish-enabled | Nexus registry username               |
 | `NEXUS_PASSWORD`       | If publish-enabled | Nexus registry password               |
 | `NEXUS_REPOSITORY_URL` | If publish-enabled | Nexus repository URL                  |
@@ -194,8 +194,8 @@ version_pattern = "v(?P<version>.*)"
 Set these in your GitHub repository settings:
 
 ```
-DOCKER_USERNAME      # Docker Hub username
-DOCKER_TOKEN         # Docker Hub access token
+DOCKER_USERNAME      # Docker registry username
+DOCKER_PASSWORD      # Docker registry password or token
 NEXUS_USERNAME       # Nexus registry username
 NEXUS_PASSWORD       # Nexus registry password
 NEXUS_REPOSITORY_URL # e.g., https://nexus.example.com/repository/wheels/

@@ -14,7 +14,7 @@ on:
         type: boolean
         default: true
       docker-target-repository:
-        description: "Target Docker repository (e.g., org/image)"
+        description: "Target Docker repository (e.g., image)"
         required: false
         type: string
         default: ""
@@ -30,10 +30,10 @@ on:
         default: true
     secrets:
       DOCKER_USERNAME:
-        description: "Docker Hub username"
+        description: "Docker registry username"
         required: false
-      DOCKER_TOKEN:
-        description: "Docker Hub token"
+      DOCKER_PASSWORD:
+        description: "Docker registry password or token"
         required: false
       NEXUS_USERNAME:
         description: "Nexus username"
@@ -121,7 +121,7 @@ jobs:
         uses: m4nh/shared-cicd/actions/docker/push-docker@main
         with:
           docker-username: ${{ secrets.DOCKER_USERNAME }}
-          docker-password: ${{ secrets.DOCKER_TOKEN }}
+          docker-password: ${{ secrets.DOCKER_PASSWORD }}
           image-name: release-image
           image-tag: ${{ needs.release.outputs.version }}
           target-repository: ${{ inputs.docker-target-repository }}
