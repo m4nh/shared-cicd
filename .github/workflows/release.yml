@@ -173,7 +173,7 @@ jobs:
   github-release:
     name: Create GitHub Release with Artifacts
     runs-on: ${{ inputs.runner }}
-    needs: [release, publish-package, push-docker]
+    needs: [release, build-package]
     if: needs.release.outputs.released == 'true'
     permissions:
       contents: write
