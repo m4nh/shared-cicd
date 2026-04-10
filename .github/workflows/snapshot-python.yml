@@ -1,0 +1,191 @@
+name: Snapshot - Python
+
+on:
+  workflow_call:
+    inputs:
+      runner:
+        description: "Runner to use"
+        required: false
+        type: string
+        default: "ubuntu-latest"
+      tag-prefix:
+        description: "Prefix for dev tags (e.g., 'develop' creates tags like 'develop/1.2.3.4')"
+        required: false
+        type: string
+        default: "develop"
+      version-tag-prefix:
+        description: "Prefix used on release tags to extract the base version (e.g., 'v' for 'v1.2.3')"
+        required: false
+        type: string
+        default: "v"
+      docker-enabled:
+        description: "Enable Docker image build and push"
+        required: false
+        type: boolean
+        default: true
+      docker-target-repository:
+        description: "Target Docker repository (e.g., org/image)"
+        required: false
+        type: string
+        default: ""
+      docker-registry:
+        description: "Docker registry URL (e.g., docker.io, ghcr.io)"
+        required: false
+        type: string
+        default: "docker.io"
+      docker-dockerfile:
+        description: "Path to Dockerfile"
+        required: false
+        type: string
+        default: "Dockerfile"
+      docker-context:
+        description: "Docker build context directory"
+        required: false
+        type: string
+        default: "."
+      docker-build-args:
+        description: "Additional Docker build arguments (space-separated, e.g., '--build-arg K=V')"
+        required: false
+        type: string
+        default: ""
+      publish-package-enabled:
+        description: "Enable package publishing to Nexus"
+        required: false
+        type: boolean
+        default: true
+    secrets:
+      DOCKER_USERNAME:
+        description: "Docker registry username"
+        required: false
+      DOCKER_PASSWORD:
+        description: "Docker registry password or token"
+        required: false
+      NEXUS_USERNAME:
+        description: "Nexus username"
+        required: false
+      NEXUS_PASSWORD:
+        description: "Nexus password"
+        required: false
+      NEXUS_REPOSITORY_URL:
+        description: "Nexus repository URL"
+        required: false
+
+concurrency:
+  group: develop
+  cancel-in-progress: true
+
+jobs:
+  create-tag:
+    name: Create Dev Tag
+    runs-on: ${{ inputs.runner }}
+    permissions:
+      contents: write
+    outputs:
+      tag: ${{ steps.tag.outputs.TAG }}
+      build: ${{ steps.build.outputs.BUILD }}
+      version: ${{ steps.version.outputs.VERSION }}
+      pep440-version: ${{ steps.pep440.outputs.PEP440_VERSION }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract current version from VCS
+        id: version
+        run: |
+          PREFIX="${{ inputs.version-tag-prefix }}"
+          TAG=$(git tag -l "${PREFIX}*" --sort=-v:refname | grep -E "^${PREFIX}[0-9]+\.[0-9]+\.[0-9]+$" | head -n 1 || true)
+          if [ -z "$TAG" ]; then
+            echo "::error::No release tags found with prefix '${PREFIX}'"
+            exit 1
+          fi
+          VERSION="${TAG#$PREFIX}"
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Calculate dev build number
+        id: build
+        run: |
+          VERSION="${{ steps.version.outputs.VERSION }}"
+          LAST=$(git tag -l "${{ inputs.tag-prefix }}/${VERSION}.*" 2>/dev/null | sed 's/.*\.//' | sort -n | tail -1)
+          if [ -z "$LAST" ]; then
+            BUILD=1
+          else
+            BUILD=$((LAST + 1))
+          fi
+          echo "BUILD=$BUILD" >> $GITHUB_OUTPUT
+
+      - name: Compute PEP 440 version
+        id: pep440
+        run: |
+          echo "PEP440_VERSION=${{ steps.version.outputs.VERSION }}.dev${{ steps.build.outputs.BUILD }}" >> $GITHUB_OUTPUT
+
+      - name: Create and push tag
+        id: tag
+        run: |
+          TAG="${{ inputs.tag-prefix }}/${{ steps.version.outputs.VERSION }}.${{ steps.build.outputs.BUILD }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag "$TAG"
+          git push origin "$TAG"
+          echo "TAG=$TAG" >> $GITHUB_OUTPUT
+
+  docker:
+    name: Build and Push Docker Image
+    runs-on: ${{ inputs.runner }}
+    needs: create-tag
+    if: inputs.docker-enabled
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build Docker Image
+        uses: m4nh/shared-cicd/actions/docker/build-docker-image@main
+        with:
+          dockerfile: ${{ inputs.docker-dockerfile }}
+          context: ${{ inputs.docker-context }}
+          tags: "dev-image:${{ needs.create-tag.outputs.pep440-version }}"
+          build-args: "--build-arg SETUPTOOLS_SCM_PRETEND_VERSION=${{ needs.create-tag.outputs.pep440-version }} ${{ inputs.docker-build-args }}"
+
+      - name: Push Docker Image
+        uses: m4nh/shared-cicd/actions/docker/push-docker@main
+        with:
+          docker-username: ${{ secrets.DOCKER_USERNAME }}
+          docker-password: ${{ secrets.DOCKER_PASSWORD }}
+          image-name: dev-image
+          image-tag: ${{ needs.create-tag.outputs.pep440-version }}
+          target-repository: ${{ inputs.docker-target-repository }}
+          registry: ${{ inputs.docker-registry }}
+
+  build-and-publish-package:
+    name: Build and Publish Package
+    runs-on: ${{ inputs.runner }}
+    needs: [create-tag]
+    if: inputs.publish-package-enabled
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract Python Versions
+        uses: m4nh/shared-cicd/actions/python/extract-python-versions@main
+        id: extract
+
+      - name: Build Wheel
+        uses: m4nh/shared-cicd/actions/python/build-wheel@main
+        with:
+          python-version: ${{ steps.extract.outputs.min-version }}
+          version: ${{ needs.create-tag.outputs.pep440-version }}
+
+      - name: Publish Package
+        uses: m4nh/shared-cicd/actions/python/publish-package@main
+        with:
+          nexus-username: ${{ secrets.NEXUS_USERNAME }}
+          nexus-password: ${{ secrets.NEXUS_PASSWORD }}
+          wheel-path: dist/*
+          repository-url: ${{ secrets.NEXUS_REPOSITORY_URL }}
