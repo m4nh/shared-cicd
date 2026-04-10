@@ -28,6 +28,10 @@ runs:
       with:
         node-version: ${{ inputs.node-version }}
 
+    - name: Enable Corepack
+      shell: bash
+      run: corepack enable
+
     - name: Configure Nexus registry auth
       shell: bash
       working-directory: ${{ inputs.package-path }}
@@ -36,13 +40,11 @@ runs:
         NEXUS_USERNAME: ${{ inputs.nexus-username }}
         NEXUS_PASSWORD: ${{ inputs.nexus-password }}
       run: |
-        REGISTRY=$(echo "$REPOSITORY_URL" | sed 's|https:||')
-        echo "${REGISTRY}:username=${NEXUS_USERNAME}" >> .yarnrc.yml
-        echo "${REGISTRY}:password=$(echo -n "${NEXUS_PASSWORD}" | base64)" >> .yarnrc.yml
-        echo "${REGISTRY}:always-auth=true" >> .yarnrc.yml
-        yarn config set registry "$REPOSITORY_URL"
+        yarn config set npmRegistryServer "$REPOSITORY_URL"
+        yarn config set npmAuthIdent "${NEXUS_USERNAME}:${NEXUS_PASSWORD}"
+        yarn config set npmAlwaysAuth true
 
     - name: Publish to Nexus
       shell: bash
       working-directory: ${{ inputs.package-path }}
-      run: yarn publish --non-interactive --registry ${{ inputs.repository-url }}
+      run: yarn npm publish
