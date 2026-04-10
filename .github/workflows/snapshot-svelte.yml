@@ -122,15 +122,28 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Stamp dev version into package.json
-        run: |
-          corepack enable
-          yarn version --new-version ${{ needs.compute-version.outputs.semver-version }} --no-git-tag-version
-
-      - name: Build
-        uses: m4nh/shared-cicd/actions/yarn/build-package@main
+      - name: Setup Node.js and Yarn
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ inputs.node-version }}
+          cache: yarn
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Stamp dev version into package.json
+        run: |
+          node -e "
+            const pkg = require('./package.json');
+            pkg.version = '${{ needs.compute-version.outputs.semver-version }}';
+            require('fs').writeFileSync('./package.json', JSON.stringify(pkg, null, 2) + '\n');
+          "
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Build
+        run: yarn build
 
       - name: Publish Package
         uses: m4nh/shared-cicd/actions/yarn/publish-package@main
