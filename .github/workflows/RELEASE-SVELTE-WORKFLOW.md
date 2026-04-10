@@ -103,6 +103,15 @@ release (semantic versioning, creates tag + GitHub release)
 | ------------------------- | ------- | ------- | ---------------------------------- |
 | `publish-package-enabled` | boolean | `true`  | Enable package publishing to Nexus |
 
+## Permissions
+
+The calling workflow **must** grant the following permissions:
+
+```yaml
+permissions:
+  contents: write # Required for semantic-release to create tags and GitHub releases
+```
+
 ## Secrets
 
 | Secret                 | Required           | Description                           |
