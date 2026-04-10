@@ -1,16 +1,15 @@
 # Release Workflow - Python
 
-A reusable GitHub Actions workflow that orchestrates the complete process of creating a new release including semantic versioning, building, publishing, and pushing to multiple registries.
+A reusable GitHub Actions workflow that orchestrates the complete process of creating a new release including semantic versioning, building Docker images, publishing packages, and creating GitHub releases.
 
 ## Overview
 
 This workflow automates the full release process:
 
 - **Semantic Versioning**: Automatically determines version based on conventional commits
-- **Version Extraction**: Gets Python version requirements from `pyproject.toml`
-- **Docker Build & Push**: Builds and pushes Docker image to Docker Hub
-- **Package Build & Publish**: Builds Python wheel and publishes to Nexus
-- **GitHub Release**: Creates GitHub release with built artifacts
+- **Docker Build & Push**: Builds and pushes Docker image to registry (if enabled)
+- **Package Build & Publish**: Builds Python wheel and publishes to Nexus (if enabled)
+- **GitHub Release**: Creates GitHub release with metadata from semantic release
 
 ## Using This Workflow
 
@@ -66,21 +65,13 @@ jobs:
 ## Workflow Diagram
 
 ```
-release ─────────────────── extract-versions
-    │  (run in parallel)           │
-    │                              │
-    ▼ (needs: release)             │
-  docker                           │
-  (build + push, same runner)      │
-                                   │
-                    ▼ (needs: release + extract-versions)
-                 build-package
-                      │
-                      ▼ (needs: build-package)
-               publish-package (if publish-package-enabled)
-
-    ▼ (needs: release + build-package)
-github-release
+release (semantic versioning, creates tag + GitHub release)
+  │
+  ├── docker-enabled? ──YES──► docker (build + push)
+  │       └──NO──► skipped
+  │
+  └── publish-enabled? ──YES──► build-and-publish-package
+          └──NO──► skipped
 ```
 
 ## Inputs
@@ -125,58 +116,29 @@ github-release
 
 - Analyzes commit history to determine if new version is needed
 - Creates version tag and GitHub release if changes warrant it
+- If no changes warrant a release, workflow stops (other jobs are skipped)
 - **Outputs**: `released` (true/false), `version` (semver), `tag` (git tag)
-
-- Runs on any push to `main` branch
-
-### extract-versions
-
-**Purpose**: Determines Python version requirements from project config
-
-- Extracts supported Python versions from `pyproject.toml`
-- **Outputs**: `min-version`, `max-version`, `python-versions` (JSON array)
+- **Depends on**: nothing (runs first)
 
 ### docker
 
-**Purpose**: Builds and pushes Docker image to configured registry in a single job
+**Purpose**: Builds and pushes Docker image to configured registry
 
 - Builds Docker image tagged with semantic version
 - Authenticates with Docker registry
 - Tags and pushes image to target repository
-- Uses constant internal image name `release-image` before retagging
-- **Both steps run on the same runner**, so no image transfer issues
-- **Condition**: Only if `docker-enabled=true` AND `released=true`
+- **Condition**: Only if `docker-enabled=true` AND previous release job released a new version
 - **Depends on**: release job
 
-### build-package
+### build-and-publish-package
 
-**Purpose**: Builds Python wheel distribution
+**Purpose**: Builds Python wheel and publishes it to Nexus
 
-- Builds wheel with version from semantic release
-- Uses minimum Python version for best compatibility
-- Uploads wheel to GitHub artifacts
-- **Condition**: Only if `released=true`
-- **Depends on**: release, extract-versions jobs
-
-### publish-package
-
-**Purpose**: Publishes wheel to Nexus repository
-
-- Downloads built wheel from artifacts
-- Publishes to Nexus using configured credentials
-- **Condition**: Only if `publish-package-enabled=true` AND `released=true`
-- **Depends on**: build-package job
-
-### github-release
-
-**Purpose**: Creates final GitHub release with all artifacts
-
-- Downloads wheel artifacts
-- Creates/updates GitHub release with semantic version
-- Attaches wheel files to release
-- Auto-generates release notes from commits
-- **Condition**: Only if all jobs succeeded AND `released=true`
-- **Depends on**: release, build-package jobs (waits for artifacts from build-package)
+- Extracts supported Python versions from `pyproject.toml`
+- Builds wheel with version from semantic release using minimum supported Python version
+- Publishes directly to Nexus (no artifact staging)
+- **Condition**: Only if `publish-package-enabled=true` AND previous release job released a new version
+- **Depends on**: release job
 
 ## Required Files
 
@@ -214,30 +176,25 @@ Push commit with conventional message to main
     ↓
 Trigger workflow
     ↓
-1. Semantic Release analyzes commits
-   - No semver bump needed? → Workflow stops (skipped path)
-   - New version needed? → Continue...
+Release job:
+  - Semantic Release analyzes commits
+  - No semver bump needed? → Workflow stops (docker and build-and-publish-package are skipped)
+  - New version needed? → Creates tag v1.2.3 and GitHub release
     ↓
-2. Extract Python versions (parallel)
-    ↓ (jobs run in parallel from here)
-3a. Build Docker image v1.2.3
-    ↓
-    Push to registry
-
-3b. Build Python wheel v1.2.3 → Upload to artifacts
-    ↓
-    Publish to Nexus (downloads from artifacts)
-    ↓
-4. Both complete → Create GitHub release with artifacts
+Parallel execution (if released):
+  ├─ Build Docker image (1.2.3) → Push to registry    [if docker-enabled]
+  │
+  └─ Extract Python versions from pyproject.toml
+     Build Python wheel (1.2.3) → Publish to Nexus     [if publish-package-enabled]
     ↓
 Done ✅
 ```
 
 **Key points**:
 
+- If no version bump is needed, the workflow exits early (docker and build-and-publish-package are skipped)
 - Docker build and push happen on **same runner** (no image loss)
-- Python build and publish happen on **separate runners** (artifacts bridge them)
-- All paths must complete before github-release runs
+- Python build and publish happen together in **one job** (no artifacts needed)
 
 ## Security Best Practices
 
