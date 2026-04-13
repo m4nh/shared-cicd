@@ -126,7 +126,7 @@ jobs:
           NEXUS_USERNAME: ${{ secrets.NEXUS_USERNAME }}
           NEXUS_PASSWORD: ${{ secrets.NEXUS_PASSWORD }}
         run: |
-          printf 'npmScopes:\n  %s:\n    npmAuthIdent: %s\n' \
+          printf 'npmScopes:\n  "%s":\n    npmAuthIdent: "%s"\n' \
             "$NPM_SCOPE" "$(printf '%s:%s' "$NEXUS_USERNAME" "$NEXUS_PASSWORD" | base64 -w 0)" > /tmp/ci-yarnrc.yml
 
       - name: Build Docker Image
