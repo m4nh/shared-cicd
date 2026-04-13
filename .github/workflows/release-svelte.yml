@@ -80,8 +80,6 @@ jobs:
     runs-on: ${{ inputs.runner }}
     permissions:
       contents: write
-      issues: write
-      pull-requests: write
     outputs:
       released: ${{ steps.semrel.outputs.new_release_published }}
       version: ${{ steps.semrel.outputs.new_release_version }}
