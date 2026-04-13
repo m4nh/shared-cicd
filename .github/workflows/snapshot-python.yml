@@ -107,6 +107,22 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Prepare pip Nexus secret
+        shell: bash
+        env:
+          NEXUS_USERNAME: ${{ secrets.NEXUS_USERNAME }}
+          NEXUS_PASSWORD: ${{ secrets.NEXUS_PASSWORD }}
+          NEXUS_REPOSITORY_URL: ${{ secrets.NEXUS_REPOSITORY_URL }}
+        run: |
+          if [ -n "$NEXUS_REPOSITORY_URL" ]; then
+            BASE_URL="${NEXUS_REPOSITORY_URL%/}"
+            PROTO="${BASE_URL%%://*}"
+            REST="${BASE_URL#*://}"
+            echo "${PROTO}://${NEXUS_USERNAME}:${NEXUS_PASSWORD}@${REST}/simple/" > /tmp/pip_extra_index_url
+          else
+            echo "" > /tmp/pip_extra_index_url
+          fi
+
       - name: Build Docker Image
         uses: m4nh/shared-cicd/actions/docker/build-docker-image@main
         with:
@@ -114,6 +130,7 @@ jobs:
           context: ${{ inputs.docker-context }}
           tags: "dev-image:${{ needs.compute-version.outputs.pep440-version }}"
           build-args: "--build-arg SETUPTOOLS_SCM_PRETEND_VERSION=${{ needs.compute-version.outputs.pep440-version }} ${{ inputs.docker-build-args }}"
+          build-secrets: "--secret id=pip_extra_index_url,src=/tmp/pip_extra_index_url"
 
       - name: Push Docker Image
         uses: m4nh/shared-cicd/actions/docker/push-docker@main
