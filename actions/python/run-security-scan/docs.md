@@ -15,15 +15,18 @@ Perfect for integrating into CI/CD pipelines to catch security issues early.
 
 ## Inputs
 
-| Input                | Required | Default  | Description                                  |
-| -------------------- | -------- | -------- | -------------------------------------------- |
-| `python-version`     | No       | `3.11`   | Python version to use for scanning           |
-| `scan-source-code`   | No       | `true`   | Enable bandit static security analysis       |
-| `source-path`        | No       | `src/`   | Path to scan with bandit (e.g., `src/`, `.`) |
-| `audit-dependencies` | No       | `true`   | Enable pip-audit dependency scanning         |
-| `bandit-args`        | No       | `-ll -q` | Additional arguments for bandit              |
-| `pip-audit-args`     | No       | ``       | Additional arguments for pip-audit           |
-| `install-project`    | No       | `false`  | Install the project before scanning          |
+| Input                  | Required | Default  | Description                                                                                                                                      |
+| ---------------------- | -------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `python-version`       | No       | `3.11`   | Python version to use for scanning                                                                                                               |
+| `scan-source-code`     | No       | `true`   | Enable bandit static security analysis                                                                                                           |
+| `source-path`          | No       | `src/`   | Path to scan with bandit (e.g., `src/`, `.`)                                                                                                     |
+| `audit-dependencies`   | No       | `true`   | Enable pip-audit dependency scanning                                                                                                             |
+| `bandit-args`          | No       | `-ll -q` | Additional arguments for bandit                                                                                                                  |
+| `pip-audit-args`       | No       | ``       | Additional arguments for pip-audit                                                                                                               |
+| `install-project`      | No       | `false`  | Install the project before scanning                                                                                                              |
+| `nexus-username`       | No       | ``       | Nexus username for resolving private packages (used when `install-project` is `true`)                                                            |
+| `nexus-password`       | No       | ``       | Nexus password for resolving private packages                                                                                                    |
+| `nexus-repository-url` | No       | ``       | Nexus base URL (e.g., `https://host/repository/wheels/`). When set, packages are also resolved via `--extra-index-url` pointing to `.../simple/` |
 
 ## Outputs
 

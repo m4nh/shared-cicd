@@ -78,6 +78,16 @@ on:
         required: false
         type: string
         default: ""
+    secrets:
+      NEXUS_USERNAME:
+        description: "Nexus username for resolving private Python packages"
+        required: false
+      NEXUS_PASSWORD:
+        description: "Nexus password for resolving private Python packages"
+        required: false
+      NEXUS_REPOSITORY_URL:
+        description: "Nexus repository base URL (e.g., https://host/repository/wheels/)"
+        required: false
 
 jobs:
   extract-versions:
@@ -128,6 +138,9 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           pytest-args: ${{ inputs.pytest-args }}
+          nexus-username: ${{ secrets.NEXUS_USERNAME }}
+          nexus-password: ${{ secrets.NEXUS_PASSWORD }}
+          nexus-repository-url: ${{ secrets.NEXUS_REPOSITORY_URL }}
 
   security:
     name: Security Scan
@@ -142,6 +155,9 @@ jobs:
         with:
           python-version: ${{ needs.extract-versions.outputs.min-version }}
           source-path: ${{ inputs.security-source-path }}
+          nexus-username: ${{ secrets.NEXUS_USERNAME }}
+          nexus-password: ${{ secrets.NEXUS_PASSWORD }}
+          nexus-repository-url: ${{ secrets.NEXUS_REPOSITORY_URL }}
 
   build-wheel:
     name: Build Wheel

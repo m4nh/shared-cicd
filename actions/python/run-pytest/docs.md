@@ -14,12 +14,15 @@ Perfect for use with matrix strategies to test across multiple Python versions.
 
 ## Inputs
 
-| Input            | Required | Default | Description                                               |
-| ---------------- | -------- | ------- | --------------------------------------------------------- |
-| `python-version` | Yes      | —       | Python version to use (e.g., `3.9`, `3.10`, `3.11`)       |
-| `pytest-args`    | No       | ``      | Additional arguments to pass to pytest (e.g., `-v --cov`) |
-| `cache-pip`      | No       | `true`  | Enable pip caching for faster installations               |
-| `extras`         | No       | `dev`   | Extras to install from pyproject.toml (e.g., `dev,test`)  |
+| Input                  | Required | Default | Description                                                                                                                                      |
+| ---------------------- | -------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `python-version`       | Yes      | —       | Python version to use (e.g., `3.9`, `3.10`, `3.11`)                                                                                              |
+| `pytest-args`          | No       | ``      | Additional arguments to pass to pytest (e.g., `-v --cov`)                                                                                        |
+| `cache-pip`            | No       | `true`  | Enable pip caching for faster installations                                                                                                      |
+| `extras`               | No       | `dev`   | Extras to install from pyproject.toml (e.g., `dev,test`)                                                                                         |
+| `nexus-username`       | No       | ``      | Nexus username for resolving private packages                                                                                                    |
+| `nexus-password`       | No       | ``      | Nexus password for resolving private packages                                                                                                    |
+| `nexus-repository-url` | No       | ``      | Nexus base URL (e.g., `https://host/repository/wheels/`). When set, packages are also resolved via `--extra-index-url` pointing to `.../simple/` |
 
 ## Outputs
 
@@ -91,6 +94,18 @@ jobs:
   with:
     python-version: "3.9"
     cache-pip: "false"
+```
+
+### With Nexus Private Package Registry
+
+```yaml
+- name: Run pytest (with private Nexus packages)
+  uses: m4nh/shared-cicd/actions/python/run-pytest@main
+  with:
+    python-version: "3.11"
+    nexus-username: ${{ secrets.NEXUS_USERNAME }}
+    nexus-password: ${{ secrets.NEXUS_PASSWORD }}
+    nexus-repository-url: ${{ secrets.NEXUS_REPOSITORY_URL }}
 ```
 
 ## What This Action Does

@@ -30,6 +30,18 @@ inputs:
     description: "Install the project before scanning"
     required: false
     default: "false"
+  nexus-username:
+    description: "Nexus username for private package installation"
+    required: false
+    default: ""
+  nexus-password:
+    description: "Nexus password for private package installation"
+    required: false
+    default: ""
+  nexus-repository-url:
+    description: "Nexus repository base URL (e.g., https://host/repository/wheels/). When provided, packages are also resolved from this index."
+    required: false
+    default: ""
 
 runs:
   using: "composite"
@@ -53,7 +65,20 @@ runs:
     - name: Install project dependencies
       if: inputs.install-project == 'true'
       shell: bash
-      run: pip install "."
+      env:
+        NEXUS_USERNAME: ${{ inputs.nexus-username }}
+        NEXUS_PASSWORD: ${{ inputs.nexus-password }}
+        NEXUS_REPOSITORY_URL: ${{ inputs.nexus-repository-url }}
+      run: |
+        if [ -n "$NEXUS_REPOSITORY_URL" ]; then
+          BASE_URL="${NEXUS_REPOSITORY_URL%/}"
+          PROTO="${BASE_URL%%://*}"
+          REST="${BASE_URL#*://}"
+          EXTRA_INDEX_URL="${PROTO}://${NEXUS_USERNAME}:${NEXUS_PASSWORD}@${REST}/simple/"
+          pip install "." --extra-index-url "$EXTRA_INDEX_URL"
+        else
+          pip install "."
+        fi
 
     - name: Run pip-audit (dependency scanning)
       if: inputs.audit-dependencies == 'true'
