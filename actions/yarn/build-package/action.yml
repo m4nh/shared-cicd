@@ -18,6 +18,18 @@ inputs:
     description: "Version to stamp into package.json before building (e.g., '1.2.3-dev.4'). If empty, package.json is not modified."
     required: false
     default: ""
+  npm-scope:
+    description: "Private npm scope to authenticate (e.g., 'myorg'). If empty, no scope auth is configured."
+    required: false
+    default: ""
+  npm-username:
+    description: "Username for the private npm scope registry."
+    required: false
+    default: ""
+  npm-password:
+    description: "Password for the private npm scope registry."
+    required: false
+    default: ""
 
 runs:
   using: "composite"
@@ -41,6 +53,16 @@ runs:
           pkg.version = '${{ inputs.version }}';
           require('fs').writeFileSync('./package.json', JSON.stringify(pkg, null, 2) + '\n');
         "
+
+    - name: Configure private npm scope
+      if: inputs.npm-scope != ''
+      shell: bash
+      working-directory: ${{ inputs.package-path }}
+      env:
+        NPM_SCOPE: ${{ inputs.npm-scope }}
+        NPM_USERNAME: ${{ inputs.npm-username }}
+        NPM_PASSWORD: ${{ inputs.npm-password }}
+      run: yarn config set "npmScopes.$NPM_SCOPE.npmAuthIdent" "$(printf '%s:%s' "$NPM_USERNAME" "$NPM_PASSWORD" | base64 -w 0)"
 
     - name: Install dependencies
       shell: bash

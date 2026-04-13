@@ -43,6 +43,11 @@ on:
         required: false
         type: string
         default: ""
+      npm-scope:
+        description: "Private npm scope to authenticate during install (e.g., 'myorg'). Uses NEXUS_USERNAME and NEXUS_PASSWORD secrets."
+        required: false
+        type: string
+        default: ""
       publish-package-enabled:
         description: "Enable package publishing to Nexus"
         required: false
@@ -113,6 +118,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Prepare Docker build secret
+        if: inputs.npm-scope != ''
+        shell: bash
+        env:
+          NPM_SCOPE: ${{ inputs.npm-scope }}
+          NEXUS_USERNAME: ${{ secrets.NEXUS_USERNAME }}
+          NEXUS_PASSWORD: ${{ secrets.NEXUS_PASSWORD }}
+        run: |
+          printf 'npmScopes:\n  %s:\n    npmAuthIdent: %s\n' \
+            "$NPM_SCOPE" "$(printf '%s:%s' "$NEXUS_USERNAME" "$NEXUS_PASSWORD" | base64 -w 0)" > /tmp/ci-yarnrc.yml
+
       - name: Build Docker Image
         uses: m4nh/shared-cicd/actions/docker/build-docker-image@main
         with:
@@ -120,6 +136,7 @@ jobs:
           context: ${{ inputs.docker-context }}
           tags: "release-image:${{ needs.release.outputs.version }}"
           build-args: ${{ inputs.docker-build-args }}
+          build-secrets: ${{ inputs.npm-scope != '' && '--secret id=yarnrc,src=/tmp/ci-yarnrc.yml' || '' }}
 
       - name: Push Docker Image
         uses: m4nh/shared-cicd/actions/docker/push-docker@main
@@ -146,6 +163,9 @@ jobs:
         with:
           node-version: ${{ inputs.node-version }}
           version: ${{ needs.release.outputs.version }}
+          npm-scope: ${{ inputs.npm-scope }}
+          npm-username: ${{ secrets.NEXUS_USERNAME }}
+          npm-password: ${{ secrets.NEXUS_PASSWORD }}
 
       - name: Publish Package
         uses: m4nh/shared-cicd/actions/yarn/publish-package@main

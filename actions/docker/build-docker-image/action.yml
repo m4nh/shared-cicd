@@ -17,6 +17,10 @@ inputs:
     description: "Docker build arguments (space-separated, e.g., '--build-arg VERSION=1.0.0 --build-arg ENV=prod')"
     required: false
     default: ""
+  build-secrets:
+    description: "Docker build secrets (space-separated, e.g., '--secret id=foo,src=/tmp/bar')"
+    required: false
+    default: ""
 
 outputs:
   image-id:
@@ -37,6 +41,7 @@ runs:
           -f ${{ inputs.dockerfile }} \
           -t ${{ inputs.tags }} \
           ${{ inputs.build-args }} \
+          ${{ inputs.build-secrets }} \
           ${{ inputs.context }}
 
         # Get image ID from first tag
