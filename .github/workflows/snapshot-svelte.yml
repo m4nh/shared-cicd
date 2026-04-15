@@ -87,7 +87,8 @@ jobs:
         id: semver
         run: |
           BUILD=$(git rev-list "${{ steps.version.outputs.tag }}"..HEAD --count)
-          echo "SEMVER_VERSION=${{ steps.version.outputs.version }}-dev.${BUILD}" >> $GITHUB_OUTPUT
+          SHA=$(git rev-parse --short HEAD)
+          echo "SEMVER_VERSION=${{ steps.version.outputs.version }}-dev.${BUILD}+${SHA}" >> $GITHUB_OUTPUT
   docker:
     name: Build and Push Docker Image
     runs-on: ${{ inputs.runner }}

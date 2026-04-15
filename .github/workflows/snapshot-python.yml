@@ -95,7 +95,8 @@ jobs:
           PREFIX="${{ inputs.version-tag-prefix }}"
           VERSION="${{ steps.version.outputs.VERSION }}"
           BUILD=$(git rev-list "${PREFIX}${VERSION}"..HEAD --count)
-          echo "PEP440_VERSION=${VERSION}.dev${BUILD}" >> $GITHUB_OUTPUT
+          SHA=$(git rev-parse --short HEAD)
+          echo "PEP440_VERSION=${VERSION}.dev${BUILD}+${SHA}" >> $GITHUB_OUTPUT
 
   docker:
     name: Build and Push Docker Image

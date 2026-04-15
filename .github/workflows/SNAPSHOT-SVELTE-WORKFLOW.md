@@ -12,16 +12,16 @@ This workflow automates the full dev-build process:
 
 ## Version Scheme
 
-Given a latest release tag `v1.2.3` and 4 commits since that tag:
+Given a latest release tag `v1.2.3`, 4 commits since that tag, and a current commit SHA of `abc1234`:
 
-| Artifact       | Format                       | Example                 |
-| -------------- | ---------------------------- | ----------------------- |
-| Release tag    | `{prefix}{base-version}`     | `v1.2.3`                |
-| Semver version | `{base-version}-dev.{build}` | `1.2.3-dev.4`           |
-| Docker image   | tagged with semver version   | `org/image:1.2.3-dev.4` |
-| NPM package    | uses semver version          | `myapp@1.2.3-dev.4`     |
+| Artifact       | Format                             | Example                         |
+| -------------- | ---------------------------------- | ------------------------------- |
+| Release tag    | `{prefix}{base-version}`           | `v1.2.3`                        |
+| Semver version | `{base-version}-dev.{build}+{sha}` | `1.2.3-dev.4+abc1234`           |
+| Docker image   | tagged with semver version         | `org/image:1.2.3-dev.4+abc1234` |
+| NPM package    | uses semver version                | `myapp@1.2.3-dev.4+abc1234`     |
 
-The build number is computed by counting commits since the latest release tag.
+The build number is computed by counting commits since the latest release tag, and the SHA is the short commit hash of the current HEAD.
 
 ## Using This Workflow
 

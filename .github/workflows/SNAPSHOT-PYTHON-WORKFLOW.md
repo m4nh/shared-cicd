@@ -12,16 +12,16 @@ This workflow automates the full dev-build process:
 
 ## Version Scheme
 
-Given a latest release tag `v1.2.3` and a `version-tag-prefix` of `v`:
+Given a latest release tag `v1.2.3`, 4 commits since that tag, a `version-tag-prefix` of `v`, and a current commit SHA of `abc1234`:
 
-| Artifact        | Format                      | Example                  |
-| --------------- | --------------------------- | ------------------------ |
-| Release tag     | `{prefix}{base-version}`    | `v1.2.3`                 |
-| PEP 440 version | `{base-version}.dev{build}` | `1.2.3.dev4`             |
-| Docker image    | tagged with PEP 440 version | `org/image:1.2.3.dev4`   |
-| Wheel filename  | uses PEP 440 version        | `myapp-1.2.3.dev4-*.whl` |
+| Artifact        | Format                            | Example                          |
+| --------------- | --------------------------------- | -------------------------------- |
+| Release tag     | `{prefix}{base-version}`          | `v1.2.3`                         |
+| PEP 440 version | `{base-version}.dev{build}+{sha}` | `1.2.3.dev4+abc1234`             |
+| Docker image    | tagged with PEP 440 version       | `org/image:1.2.3.dev4+abc1234`   |
+| Wheel filename  | uses PEP 440 version              | `myapp-1.2.3.dev4+abc1234-*.whl` |
 
-The build number is computed by counting commits since the latest release tag (e.g., 4 commits after `v1.2.3` → `1.2.3.dev4`).
+The build number is computed by counting commits since the latest release tag, and the SHA is the short commit hash of the current HEAD (e.g., 4 commits after `v1.2.3` with SHA `abc1234` → `1.2.3.dev4+abc1234`).
 
 ## Using This Workflow
 
