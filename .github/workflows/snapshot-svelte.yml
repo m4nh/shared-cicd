@@ -70,6 +70,7 @@ jobs:
     outputs:
       version: ${{ steps.version.outputs.version }}
       semver-version: ${{ steps.semver.outputs.SEMVER_VERSION }}
+      docker-version: ${{ steps.semver.outputs.DOCKER_VERSION }}
 
     steps:
       - name: Checkout
@@ -94,7 +95,10 @@ jobs:
             BUILD=$(git rev-list --all --count)
           fi
           SHA=$(git rev-parse --short HEAD)
-          echo "SEMVER_VERSION=${{ steps.version.outputs.version }}-dev.${BUILD}+${SHA}" >> $GITHUB_OUTPUT
+          SEMVER="${{ steps.version.outputs.version }}-dev.${BUILD}+${SHA}"
+          DOCKER="${{ steps.version.outputs.version }}-dev.${BUILD}-${SHA}"
+          echo "SEMVER_VERSION=${SEMVER}" >> $GITHUB_OUTPUT
+          echo "DOCKER_VERSION=${DOCKER}" >> $GITHUB_OUTPUT
   docker:
     name: Build and Push Docker Image
     runs-on: ${{ inputs.runner }}
@@ -121,7 +125,7 @@ jobs:
         with:
           dockerfile: ${{ inputs.docker-dockerfile }}
           context: ${{ inputs.docker-context }}
-          tags: "dev-image:${{ needs.compute-version.outputs.semver-version }}"
+          tags: "dev-image:${{ needs.compute-version.outputs.docker-version }}"
           build-args: ${{ inputs.docker-build-args }}
           build-secrets: ${{ inputs.npm-scope != '' && '--secret id=yarnrc,src=/tmp/ci-yarnrc.yml' || '' }}
 
@@ -131,7 +135,7 @@ jobs:
           docker-username: ${{ secrets.DOCKER_USERNAME }}
           docker-password: ${{ secrets.DOCKER_PASSWORD }}
           image-name: dev-image
-          image-tag: ${{ needs.compute-version.outputs.semver-version }}
+          image-tag: ${{ needs.compute-version.outputs.docker-version }}
           target-repository: ${{ inputs.docker-target-repository }}
           registry: ${{ inputs.docker-registry }}
 

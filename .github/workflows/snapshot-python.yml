@@ -76,6 +76,7 @@ jobs:
     outputs:
       version: ${{ steps.version.outputs.VERSION }}
       pep440-version: ${{ steps.pep440.outputs.PEP440_VERSION }}
+      docker-version: ${{ steps.pep440.outputs.DOCKER_VERSION }}
 
     steps:
       - name: Checkout
@@ -101,7 +102,10 @@ jobs:
             BUILD=$(git rev-list --all --count)
           fi
           SHA=$(git rev-parse --short HEAD)
-          echo "PEP440_VERSION=${VERSION}.dev${BUILD}+${SHA}" >> $GITHUB_OUTPUT
+          PEP440="${VERSION}.dev${BUILD}+${SHA}"
+          DOCKER="${VERSION}.dev${BUILD}-${SHA}"
+          echo "PEP440_VERSION=${PEP440}" >> $GITHUB_OUTPUT
+          echo "DOCKER_VERSION=${DOCKER}" >> $GITHUB_OUTPUT
 
   docker:
     name: Build and Push Docker Image
@@ -134,7 +138,7 @@ jobs:
         with:
           dockerfile: ${{ inputs.docker-dockerfile }}
           context: ${{ inputs.docker-context }}
-          tags: "dev-image:${{ needs.compute-version.outputs.pep440-version }}"
+          tags: "dev-image:${{ needs.compute-version.outputs.docker-version }}"
           build-args: "--build-arg SETUPTOOLS_SCM_PRETEND_VERSION=${{ needs.compute-version.outputs.pep440-version }} ${{ inputs.docker-build-args }}"
           build-secrets: "--secret id=pip_extra_index_url,src=/tmp/pip_extra_index_url"
 
@@ -144,7 +148,7 @@ jobs:
           docker-username: ${{ secrets.DOCKER_USERNAME }}
           docker-password: ${{ secrets.DOCKER_PASSWORD }}
           image-name: dev-image
-          image-tag: ${{ needs.compute-version.outputs.pep440-version }}
+          image-tag: ${{ needs.compute-version.outputs.docker-version }}
           target-repository: ${{ inputs.docker-target-repository }}
           registry: ${{ inputs.docker-registry }}
 
