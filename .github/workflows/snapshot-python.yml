@@ -94,7 +94,12 @@ jobs:
         run: |
           PREFIX="${{ inputs.version-tag-prefix }}"
           VERSION="${{ steps.version.outputs.VERSION }}"
-          BUILD=$(git rev-list "${PREFIX}${VERSION}"..HEAD --count)
+          FOUND="${{ steps.version.outputs.found }}"
+          if [ "$FOUND" = "true" ]; then
+            BUILD=$(git rev-list "${PREFIX}${VERSION}"..HEAD --count)
+          else
+            BUILD=$(git rev-list --all --count)
+          fi
           SHA=$(git rev-parse --short HEAD)
           echo "PEP440_VERSION=${VERSION}.dev${BUILD}+${SHA}" >> $GITHUB_OUTPUT
 

@@ -86,7 +86,13 @@ jobs:
       - name: Compute semver dev version
         id: semver
         run: |
-          BUILD=$(git rev-list "${{ steps.version.outputs.tag }}"..HEAD --count)
+          TAG="${{ steps.version.outputs.tag }}"
+          FOUND="${{ steps.version.outputs.found }}"
+          if [ "$FOUND" = "true" ]; then
+            BUILD=$(git rev-list "${TAG}"..HEAD --count)
+          else
+            BUILD=$(git rev-list --all --count)
+          fi
           SHA=$(git rev-parse --short HEAD)
           echo "SEMVER_VERSION=${{ steps.version.outputs.version }}-dev.${BUILD}+${SHA}" >> $GITHUB_OUTPUT
   docker:
