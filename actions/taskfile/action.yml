@@ -1,0 +1,55 @@
+name: Execute Taskfile
+description: Execute tasks from a Taskfile with configurable inputs and working directory
+
+inputs:
+  taskfile:
+    description: Path to the Taskfile (defaults to 'Taskfile' in working directory)
+    required: false
+    default: "Taskfile"
+  task:
+    description: Task name to execute from the Taskfile
+    required: true
+  vars:
+    description: Task variables to pass (comma-separated key=value pairs, e.g., 'var1=value1,var2=value2')
+    required: false
+    default: ""
+  dir:
+    description: Working directory to execute the task in
+    required: false
+    default: "."
+  env-vars:
+    description: Environment variables to expose to the task (JSON object or comma-separated KEY=VALUE pairs for secrets)
+    required: false
+    default: ""
+
+runs:
+  using: composite
+  steps:
+    - name: Execute Taskfile task
+      shell: bash
+      working-directory: ${{ inputs.dir }}
+      env:
+        TASKFILE_PATH: ${{ inputs.taskfile }}
+        TASKFILE_TASK: ${{ inputs.task }}
+        TASKFILE_VARS: ${{ inputs.vars }}
+        TASKFILE_ENV_VARS: ${{ inputs.env-vars }}
+      run: |
+        # Build the task command safely (no eval)
+        set -e
+        TASK_CMD=("task" "--taskfile=$TASKFILE_PATH" "$TASKFILE_TASK")
+
+        # Add variables if provided
+        if [ -n "$TASKFILE_VARS" ]; then
+          # Convert comma-separated vars to task var format
+          while IFS='=' read -r key value; do
+            TASK_CMD+=("--set" "${key}=${value}")
+          done < <(echo "$TASKFILE_VARS" | tr ',' '\n')
+        fi
+
+        # Apply environment variables if provided
+        if [ -n "$TASKFILE_ENV_VARS" ]; then
+          export $(echo "$TASKFILE_ENV_VARS" | tr ',' '\n' | tr -d ' ')
+        fi
+
+        # Execute the command safely with array
+        "${TASK_CMD[@]}"
