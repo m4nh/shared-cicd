@@ -1,0 +1,72 @@
+name: "Snapshot Version (PEP 440)"
+description: "Computes the next snapshot dev version using conventional commits
+  bump rules and PEP 440 format."
+
+inputs:
+  tag-prefix:
+    description: "Prefix for semantic version tags (e.g., 'v' for tags like 'v1.0.0')"
+    required: false
+    default: "v"
+  fallback-version:
+    description: "Version to use when no matching tags are found"
+    required: false
+    default: "0.0.0"
+
+outputs:
+  version:
+    description: "PEP 440 dev version (e.g., '0.5.0.dev5+abc1234')"
+    value: ${{ steps.compute.outputs.VERSION }}
+  docker-version:
+    description: "Docker-compatible version with '-' instead of '+' (e.g.,
+      '0.5.0.dev5-abc1234')"
+    value: ${{ steps.compute.outputs.DOCKER_VERSION }}
+
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Compute PEP 440 snapshot version
+      id: compute
+      shell: bash
+      run: |
+        PREFIX="${{ inputs.tag-prefix }}"
+        FALLBACK="${{ inputs.fallback-version }}"
+
+        TAG=$(git tag -l "${PREFIX}*" --sort=-v:refname | grep -E "^${PREFIX}[0-9]+\.[0-9]+\.[0-9]+$" | head -n 1 || true)
+
+        if [ -z "$TAG" ]; then
+          echo "::warning::No release tags found with prefix '${PREFIX}', using fallback version: ${FALLBACK}"
+          VERSION="$FALLBACK"
+          BUILD=$(git rev-list --all --count)
+        else
+          VERSION=$(echo "$TAG" | sed "s/^${PREFIX}//")
+          BUILD=$(git rev-list "${TAG}"..HEAD --count)
+          MAJOR=$(echo "$VERSION" | cut -d. -f1)
+          MINOR=$(echo "$VERSION" | cut -d. -f2)
+          PATCH=$(echo "$VERSION" | cut -d. -f3)
+
+          # Determine the required bump from conventional commits since the last tag.
+          # The highest bump found across all commits wins: major > minor > patch.
+          BUMP="patch"
+          while IFS= read -r msg; do
+            if echo "$msg" | grep -qE '^[a-zA-Z]+(\(.+\))?!:' || echo "$msg" | grep -q 'BREAKING CHANGE'; then
+              BUMP="major"
+              break
+            elif echo "$msg" | grep -qE '^feat(\(.+\))?:'; then
+              [ "$BUMP" != "major" ] && BUMP="minor"
+            fi
+          done < <(git log "${TAG}"..HEAD --pretty=format:"%s")
+
+          case "$BUMP" in
+            major) VERSION="$((MAJOR + 1)).0.0" ;;
+            minor) VERSION="${MAJOR}.$((MINOR + 1)).0" ;;
+            patch) VERSION="${MAJOR}.${MINOR}.$((PATCH + 1))" ;;
+          esac
+        fi
+
+        SHA=$(git rev-parse --short HEAD)
+        echo "VERSION=${VERSION}.dev${BUILD}+${SHA}" >> $GITHUB_OUTPUT
+        echo "DOCKER_VERSION=${VERSION}.dev${BUILD}-${SHA}" >> $GITHUB_OUTPUT

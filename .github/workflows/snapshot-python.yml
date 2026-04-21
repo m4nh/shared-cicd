@@ -9,7 +9,8 @@ on:
         type: string
         default: "ubuntu-latest"
       version-tag-prefix:
-        description: "Prefix used on release tags to extract the base version (e.g., 'v' for 'v1.2.3')"
+        description: "Prefix used on release tags to extract the base version (e.g., 'v'
+          for 'v1.2.3')"
         required: false
         type: string
         default: "v"
@@ -39,7 +40,8 @@ on:
         type: string
         default: "."
       docker-build-args:
-        description: "Additional Docker build arguments (space-separated, e.g., '--build-arg K=V')"
+        description: "Additional Docker build arguments (space-separated, e.g.,
+          '--build-arg K=V')"
         required: false
         type: string
         default: ""
@@ -74,38 +76,16 @@ jobs:
     name: Compute Version
     runs-on: ${{ inputs.runner }}
     outputs:
-      version: ${{ steps.version.outputs.VERSION }}
-      pep440-version: ${{ steps.pep440.outputs.PEP440_VERSION }}
-      docker-version: ${{ steps.pep440.outputs.DOCKER_VERSION }}
+      version: ${{ steps.snapshot.outputs.version }}
+      pep440-version: ${{ steps.snapshot.outputs.version }}
+      docker-version: ${{ steps.snapshot.outputs.docker-version }}
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Extract current version from VCS
-        id: version
-        uses: m4nh/shared-cicd/actions/git/vcs-version@main
+      - name: Compute snapshot version
+        id: snapshot
+        uses: m4nh/shared-cicd/actions/git/snapshot-version-pep440@main
         with:
           tag-prefix: ${{ inputs.version-tag-prefix }}
-
-      - name: Compute PEP 440 version
-        id: pep440
-        run: |
-          PREFIX="${{ inputs.version-tag-prefix }}"
-          VERSION="${{ steps.version.outputs.VERSION }}"
-          FOUND="${{ steps.version.outputs.found }}"
-          if [ "$FOUND" = "true" ]; then
-            BUILD=$(git rev-list "${PREFIX}${VERSION}"..HEAD --count)
-          else
-            BUILD=$(git rev-list --all --count)
-          fi
-          SHA=$(git rev-parse --short HEAD)
-          PEP440="${VERSION}.dev${BUILD}+${SHA}"
-          DOCKER="${VERSION}.dev${BUILD}-${SHA}"
-          echo "PEP440_VERSION=${PEP440}" >> $GITHUB_OUTPUT
-          echo "DOCKER_VERSION=${DOCKER}" >> $GITHUB_OUTPUT
 
   docker:
     name: Build and Push Docker Image
@@ -139,7 +119,9 @@ jobs:
           dockerfile: ${{ inputs.docker-dockerfile }}
           context: ${{ inputs.docker-context }}
           tags: "dev-image:${{ needs.compute-version.outputs.docker-version }}"
-          build-args: "--build-arg SETUPTOOLS_SCM_PRETEND_VERSION=${{ needs.compute-version.outputs.pep440-version }} ${{ inputs.docker-build-args }}"
+          build-args: "--build-arg SETUPTOOLS_SCM_PRETEND_VERSION=${{
+            needs.compute-version.outputs.pep440-version }} ${{
+            inputs.docker-build-args }}"
           build-secrets: "--secret id=pip_extra_index_url,src=/tmp/pip_extra_index_url"
 
       - name: Push Docker Image
