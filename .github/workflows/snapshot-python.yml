@@ -119,9 +119,7 @@ jobs:
           dockerfile: ${{ inputs.docker-dockerfile }}
           context: ${{ inputs.docker-context }}
           tags: "dev-image:${{ needs.compute-version.outputs.docker-version }}"
-          build-args: "--build-arg SETUPTOOLS_SCM_PRETEND_VERSION=${{
-            needs.compute-version.outputs.pep440-version }} ${{
-            inputs.docker-build-args }}"
+          build-args: ${{ inputs.docker-build-args }}
           build-secrets: "--secret id=pip_extra_index_url,src=/tmp/pip_extra_index_url"
 
       - name: Push Docker Image

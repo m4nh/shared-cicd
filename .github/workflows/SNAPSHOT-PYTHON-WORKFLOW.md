@@ -143,7 +143,7 @@ compute-version (extract version from tags, compute PEP 440 dev version)
 
 **Purpose**: Builds and pushes the Docker image to configured registry
 
-- Builds Docker image with `SETUPTOOLS_SCM_PRETEND_VERSION` set to the PEP 440 version
+- Builds Docker image, optionally injecting the PEP 440 version as a build arg (via `docker-version-build-arg`)
 - Tags image with the PEP 440 version (e.g., `org/image:1.2.3.dev4`)
 - Build and push happen on the **same runner** to avoid "image not found" errors
 - **Condition**: Only if `docker-enabled=true`
@@ -185,11 +185,18 @@ NEXUS_REPOSITORY_URL      # e.g., https://nexus.example.com/repository/wheels/
 
 ### Dockerfile Requirements
 
-The Dockerfile should accept `SETUPTOOLS_SCM_PRETEND_VERSION` as a build argument to stamp the version into the image:
+If you want the computed PEP 440 version stamped into the image, pass it via `docker-build-args`:
+
+```yaml
+with:
+  docker-build-args: "--build-arg APP_VERSION=1.2.3.dev4"
+```
+
+And declare it in your Dockerfile:
 
 ```dockerfile
-ARG SETUPTOOLS_SCM_PRETEND_VERSION=""
-ENV SETUPTOOLS_SCM_PRETEND_VERSION=${SETUPTOOLS_SCM_PRETEND_VERSION}
+ARG APP_VERSION=""
+ENV APP_VERSION=${APP_VERSION}
 ```
 
 ## Example Flow
@@ -216,7 +223,7 @@ Done ✅
 - **Build number from commits**: The dev build number counts commits since the latest release tag (not previous dev tags)
 - **PEP 440 compliance**: The `1.2.3.dev4` format is recognized by pip, twine, and PyPI-compatible registries as a pre-release
 - **Concurrency safety**: `cancel-in-progress: true` means only the latest push gets built, avoiding stale dev builds piling up
-- **Docker version injection**: `SETUPTOOLS_SCM_PRETEND_VERSION` is automatically prepended to build-args so the image always carries the correct version
+- **Docker version injection**: Pass the version via `docker-build-args` (e.g., `--build-arg APP_VERSION=1.2.3.dev4`) if you need it available in the Docker build.
 - **No release tags created**: If you need to create a release tag, use the [Release Workflow](RELEASE-PYTHON-WORKFLOW.md)
 
 ## Security Best Practices
