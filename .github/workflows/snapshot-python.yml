@@ -119,6 +119,7 @@ jobs:
           dockerfile: ${{ inputs.docker-dockerfile }}
           context: ${{ inputs.docker-context }}
           tags: "dev-image:${{ needs.compute-version.outputs.docker-version }}"
+          version: ${{ needs.compute-version.outputs.pep440-version }}
           build-args: ${{ inputs.docker-build-args }}
           build-secrets: "--secret id=pip_extra_index_url,src=/tmp/pip_extra_index_url"
 

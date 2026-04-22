@@ -39,12 +39,14 @@ on:
         type: string
         default: "."
       docker-build-args:
-        description: "Docker build arguments (space-separated, e.g., '--build-arg VERSION=1.0.0 --build-arg ENV=prod')"
+        description: "Docker build arguments (space-separated, e.g., '--build-arg
+          VERSION=1.0.0 --build-arg ENV=prod')"
         required: false
         type: string
         default: ""
       npm-scope:
-        description: "Private npm scope to authenticate during install (e.g., 'myorg'). Uses NEXUS_USERNAME and NEXUS_PASSWORD secrets."
+        description: "Private npm scope to authenticate during install (e.g., 'myorg').
+          Uses NEXUS_USERNAME and NEXUS_PASSWORD secrets."
         required: false
         type: string
         default: ""
@@ -135,8 +137,10 @@ jobs:
           dockerfile: ${{ inputs.docker-dockerfile }}
           context: ${{ inputs.docker-context }}
           tags: "release-image:${{ needs.release.outputs.version }}"
+          version: ${{ needs.release.outputs.version }}
           build-args: ${{ inputs.docker-build-args }}
-          build-secrets: ${{ inputs.npm-scope != '' && '--secret id=yarnrc,src=/tmp/ci-yarnrc.yml' || '' }}
+          build-secrets: ${{ inputs.npm-scope != '' && '--secret
+            id=yarnrc,src=/tmp/ci-yarnrc.yml' || '' }}
 
       - name: Push Docker Image
         uses: m4nh/shared-cicd/actions/docker/push-docker@main

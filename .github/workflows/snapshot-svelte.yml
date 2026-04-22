@@ -105,6 +105,7 @@ jobs:
           dockerfile: ${{ inputs.docker-dockerfile }}
           context: ${{ inputs.docker-context }}
           tags: "dev-image:${{ needs.compute-version.outputs.docker-version }}"
+          version: ${{ needs.compute-version.outputs.semver-version }}
           build-args: ${{ inputs.docker-build-args }}
           build-secrets: ${{ inputs.npm-scope != '' && '--secret
             id=yarnrc,src=/tmp/ci-yarnrc.yml' || '' }}
