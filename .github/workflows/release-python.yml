@@ -34,8 +34,19 @@ on:
         type: string
         default: "."
       docker-build-args:
-        description: "Docker build arguments (space-separated, e.g., '--build-arg
+        description:
+          "Docker build arguments (space-separated, e.g., '--build-arg
           VERSION=1.0.0 --build-arg ENV=prod')"
+        required: false
+        type: string
+        default: ""
+      tests-enabled:
+        description: "Enable pytest before release"
+        required: false
+        type: boolean
+        default: true
+      pytest-args:
+        description: "Additional arguments to pass to pytest"
         required: false
         type: string
         default: ""
@@ -66,9 +77,48 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  extract-versions:
+    name: Extract Python Versions
+    runs-on: ${{ inputs.runner }}
+    if: inputs.tests-enabled
+    outputs:
+      python-versions: ${{ steps.extract.outputs.versions-json }}
+      min-version: ${{ steps.extract.outputs.min-version }}
+      max-version: ${{ steps.extract.outputs.max-version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Extract Python versions
+        uses: m4nh/shared-cicd/actions/python/extract-python-versions@main
+        id: extract
+
+  test:
+    name: Test (Python ${{ matrix.python-version }})
+    runs-on: ${{ inputs.runner }}
+    if: inputs.tests-enabled
+    needs: extract-versions
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ${{ fromJson(needs.extract-versions.outputs.python-versions) }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run pytest
+        uses: m4nh/shared-cicd/actions/python/run-pytest@main
+        with:
+          python-version: ${{ matrix.python-version }}
+          pytest-args: ${{ inputs.pytest-args }}
+          nexus-username: ${{ secrets.NEXUS_USERNAME }}
+          nexus-password: ${{ secrets.NEXUS_PASSWORD }}
+          nexus-repository-url: ${{ secrets.NEXUS_REPOSITORY_URL }}
+
   release:
     name: Create Tag and GitHub Release
     runs-on: ${{ inputs.runner }}
+    needs: [test]
+    if: always() && (needs.test.result == 'success' || needs.test.result ==
+      'skipped')
     permissions:
       contents: write
     outputs:
