@@ -42,7 +42,7 @@ ACCESS_TOKEN=ghp_xxxxx...         # Your GitHub PAT (admin:org scope)
 ### 3. Start the Runner
 
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
 
 ### 4. Verify Registration
@@ -50,7 +50,7 @@ docker-compose up -d
 Check the logs to confirm successful registration:
 
 ```bash
-docker-compose logs -f github-runner
+docker compose logs -f github-runner
 ```
 
 You should see output like:
@@ -66,7 +66,7 @@ Then verify in GitHub:
 
 ## Configuration Details
 
-The `docker-compose.yml` is configured with:
+The `docker compose.yml` is configured with:
 
 - **RUNNER_SCOPE**: `org` — Registers the runner to your organization
 - **GITHUB_HOST**: `github.com` — GitHub instance URL
@@ -125,31 +125,31 @@ For complete documentation and advanced configuration, see:
 ### Stop the runner
 
 ```bash
-docker-compose down
+docker compose down
 ```
 
 ### View logs
 
 ```bash
-docker-compose logs -f github-runner
+docker compose logs -f github-runner
 ```
 
 ### Restart the runner
 
 ```bash
-docker-compose restart github-runner
+docker compose restart github-runner
 ```
 
 ### Remove and re-register
 
 ```bash
-docker-compose down -v  # Remove persistent volume
-docker-compose up -d    # Start fresh
+docker compose down -v  # Remove persistent volume
+docker compose up -d    # Start fresh
 ```
 
 ### Update the image
 
 ```bash
-docker-compose pull
-docker-compose up -d
+docker compose pull
+docker compose up -d
 ```

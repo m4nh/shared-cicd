@@ -23,10 +23,10 @@ services:
     environment:
       # GitHub instance configuration
       GITHUB_HOST: github.com
-      RUNNER_SCOPE: org
+      RUNNER_SCOPE: repo
 
-      # Org-level configuration
-      ORG_NAME: ${ORG_NAME}
+      # Repo-level configuration
+      REPO_URL: ${REPO_URL}
 
       # Runner identity (unique suffix auto-generated)
       RUNNER_NAME_PREFIX: ${RUNNER_NAME_PREFIX:-runner}
