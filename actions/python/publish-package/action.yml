@@ -29,7 +29,7 @@ runs:
 
     - name: Install twine
       shell: bash
-      run: pip install twine
+      run: python3 -m pip install twine
 
     - name: Upload to Nexus
       shell: bash
@@ -40,6 +40,5 @@ runs:
       run: |
         twine upload \
           --repository-url "$REPOSITORY_URL" \
-          -u "$TWINE_USERNAME" \
-          -p "$TWINE_PASSWORD" \
+          --non-interactive \
           ${{ inputs.wheel-path }}

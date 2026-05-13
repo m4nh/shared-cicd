@@ -22,6 +22,14 @@ inputs:
     description: "Auto-fix issues if the linter supports it"
     required: false
     default: "false"
+  pip-timeout:
+    description: "pip network timeout in seconds"
+    required: false
+    default: "120"
+  pip-retries:
+    description: "Number of pip retries for transient network failures"
+    required: false
+    default: "10"
 
 runs:
   using: "composite"
@@ -30,14 +38,17 @@ runs:
       uses: actions/setup-python@v5
       with:
         python-version: ${{ inputs.python-version }}
-        cache: pip
-        cache-dependency-path: pyproject.toml
 
     - name: Install linter
       shell: bash
+      env:
+        PIP_DEFAULT_TIMEOUT: ${{ inputs.pip-timeout }}
+        PIP_RETRIES: ${{ inputs.pip-retries }}
+        PIP_DISABLE_PIP_VERSION_CHECK: "1"
+        PIP_PROGRESS_BAR: "off"
       run: |
-        python -m pip install --upgrade pip
-        pip install ${{ inputs.linter }}
+        python3 -m pip install --upgrade pip
+        python3 -m pip install --prefer-binary ${{ inputs.linter }}
 
     - name: Run linter
       shell: bash

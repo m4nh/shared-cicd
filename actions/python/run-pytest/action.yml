@@ -9,10 +9,6 @@ inputs:
     description: "Additional arguments to pass to pytest"
     required: false
     default: ""
-  cache-pip:
-    description: "Enable pip caching"
-    required: false
-    default: "true"
   extras:
     description: "Extras to install (e.g., 'dev,test')"
     required: false
@@ -29,6 +25,14 @@ inputs:
     description: "Nexus repository base URL (e.g., https://host/repository/wheels/). When provided, packages are also resolved from this index."
     required: false
     default: ""
+  pip-timeout:
+    description: "pip network timeout in seconds"
+    required: false
+    default: "120"
+  pip-retries:
+    description: "Number of pip retries for transient network failures"
+    required: false
+    default: "10"
 
 runs:
   using: "composite"
@@ -37,12 +41,15 @@ runs:
       uses: actions/setup-python@v5
       with:
         python-version: ${{ inputs.python-version }}
-        cache: ${{ inputs.cache-pip == 'true' && 'pip' || 'none' }}
-        cache-dependency-path: pyproject.toml
 
     - name: Upgrade pip
       shell: bash
-      run: python -m pip install --upgrade pip
+      env:
+        PIP_DEFAULT_TIMEOUT: ${{ inputs.pip-timeout }}
+        PIP_RETRIES: ${{ inputs.pip-retries }}
+        PIP_DISABLE_PIP_VERSION_CHECK: "1"
+        PIP_PROGRESS_BAR: "off"
+      run: python3 -m pip install --upgrade pip
 
     - name: Install dependencies
       shell: bash
@@ -50,15 +57,19 @@ runs:
         NEXUS_USERNAME: ${{ inputs.nexus-username }}
         NEXUS_PASSWORD: ${{ inputs.nexus-password }}
         NEXUS_REPOSITORY_URL: ${{ inputs.nexus-repository-url }}
+        PIP_DEFAULT_TIMEOUT: ${{ inputs.pip-timeout }}
+        PIP_RETRIES: ${{ inputs.pip-retries }}
+        PIP_DISABLE_PIP_VERSION_CHECK: "1"
+        PIP_PROGRESS_BAR: "off"
       run: |
         if [ -n "$NEXUS_REPOSITORY_URL" ]; then
           BASE_URL="${NEXUS_REPOSITORY_URL%/}"
           PROTO="${BASE_URL%%://*}"
           REST="${BASE_URL#*://}"
           EXTRA_INDEX_URL="${PROTO}://${NEXUS_USERNAME}:${NEXUS_PASSWORD}@${REST}/simple/"
-          pip install ".[${{ inputs.extras }}]" --extra-index-url "$EXTRA_INDEX_URL"
+          python3 -m pip install --prefer-binary ".[${{ inputs.extras }}]" --extra-index-url "$EXTRA_INDEX_URL"
         else
-          pip install ".[${{ inputs.extras }}]"
+          python3 -m pip install --prefer-binary ".[${{ inputs.extras }}]"
         fi
 
     - name: Run pytest

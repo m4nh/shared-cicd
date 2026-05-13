@@ -21,4 +21,4 @@ runs:
     - name: Extract versions from pyproject.toml
       id: extract
       shell: bash
-      run: python ${{ github.action_path }}/extract-versions.py >> $GITHUB_OUTPUT
+      run: python3 ${{ github.action_path }}/extract-versions.py >> $GITHUB_OUTPUT
