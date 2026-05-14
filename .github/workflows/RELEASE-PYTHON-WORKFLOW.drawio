@@ -1,14 +1,14 @@
 <mxfile host="65bd71144e">
     <diagram name="Release Workflow" id="diagram-1">
-        <mxGraphModel dx="1137" dy="757" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1200" math="0" shadow="0">
+        <mxGraphModel dx="1144" dy="1980" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1200" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
-                <mxCell id="start" value="&lt;span&gt;&lt;font style=&quot;color: light-dark(rgb(255, 255, 255), rgb(255, 255, 255));&quot;&gt;🚀 Workflow Triggered&lt;/font&gt;&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1f5ff;strokeColor=#01579b;strokeWidth=3" parent="1" vertex="1">
-                    <mxGeometry x="650" y="10" width="200" height="60" as="geometry"/>
-                </mxCell>
-                <mxCell id="edge-start-release" style="edgeStyle=none;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="start" target="job-release" edge="1">
+                <mxCell id="32" style="edgeStyle=none;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="start" target="28">
                     <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="start" value="&lt;span&gt;&lt;font style=&quot;color: light-dark(rgb(255, 255, 255), rgb(255, 255, 255));&quot;&gt;🚀 Workflow Triggered&lt;/font&gt;&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1f5ff;strokeColor=#01579b;strokeWidth=3" parent="1" vertex="1">
+                    <mxGeometry x="650" y="-230" width="200" height="60" as="geometry"/>
                 </mxCell>
                 <mxCell id="job-release" value="📝 RELEASE&lt;br&gt;&lt;br&gt;- Checkout&lt;br&gt;- Semantic Release&lt;br&gt;- Create tag &amp; release" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8e6c9;strokeColor=#2e7d32;strokeWidth=2" parent="1" vertex="1">
                     <mxGeometry x="600" y="100" width="300" height="120" as="geometry"/>
@@ -93,6 +93,26 @@
                 </mxCell>
                 <mxCell id="26" value="NO" style="text;html=1;fontSize=11;fontStyle=bold;fillColor=none;strokeColor=none;" parent="1" vertex="1">
                     <mxGeometry x="970" y="410" width="50" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="33" style="edgeStyle=none;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="28" target="29">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="34" style="edgeStyle=orthogonalEdgeStyle;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;rounded=0;curved=0;" edge="1" parent="1" source="28" target="job-package-publish">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1320" y="-100"/>
+                            <mxPoint x="1320" y="610"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="28" value="&lt;font&gt;📦 Extract Python Versions&lt;br style=&quot;scrollbar-color: rgb(75, 75, 75) rgb(27, 29, 30);&quot;&gt;&lt;br style=&quot;scrollbar-color: rgb(75, 75, 75) rgb(27, 29, 30);&quot;&gt;Outputs:&lt;br style=&quot;scrollbar-color: rgb(75, 75, 75) rgb(27, 29, 30);&quot;&gt;&lt;font&gt;- python-versions&lt;br style=&quot;scrollbar-color: rgb(75, 75, 75) rgb(27, 29, 30);&quot;&gt;&lt;/font&gt;- min-version&lt;br style=&quot;scrollbar-color: rgb(75, 75, 75) rgb(27, 29, 30);&quot;&gt;- max-version&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8e6c9;strokeColor=#2e7d32;strokeWidth=2" vertex="1" parent="1">
+                    <mxGeometry x="650" y="-150" width="200" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="31" style="edgeStyle=none;html=1;" edge="1" parent="1" source="29" target="job-release">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="29" value="✅ TEST JOBS (MATRIX)&lt;br&gt;&lt;br&gt;- Checkout&lt;br&gt;- Setup Python&lt;br&gt;- Run pytest" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8e6c9;strokeColor=#2e7d32;strokeWidth=2" vertex="1" parent="1">
+                    <mxGeometry x="650" y="-30" width="200" height="100" as="geometry"/>
                 </mxCell>
             </root>
         </mxGraphModel>
