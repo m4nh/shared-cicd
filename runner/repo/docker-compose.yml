@@ -1,5 +1,5 @@
 x-github-runner: &github-runner
-  image: myoung34/github-runner:latest
+  build: .
   restart: unless-stopped
 
   env_file:

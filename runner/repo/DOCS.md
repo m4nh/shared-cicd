@@ -1,6 +1,6 @@
 # GitHub Actions Self-Hosted Runner (Repository)
 
-This directory contains a Docker Compose setup for running a GitHub Actions self-hosted runner scoped to a **single repository**, using the [`myoung34/github-runner`](https://hub.docker.com/r/myoung34/github-runner) image.
+This directory contains a Docker Compose setup for running a GitHub Actions self-hosted runner scoped to a **single repository**. It builds a custom image based on [`myoung34/github-runner`](https://hub.docker.com/r/myoung34/github-runner), allowing you to install additional dependencies as needed.
 
 ## Quick Start
 
@@ -12,6 +12,7 @@ You need a GitHub Personal Access Token (PAT) with the following scopes:
 - **`workflow`** (required) — Manage GitHub Actions workflows
 
 Additional requirements:
+
 - **Status**: Token must not be expired
 - **Access**: User must have admin access to the repository
 
@@ -52,12 +53,14 @@ docker compose logs -f github-runner-1
 ```
 
 You should see output like:
+
 ```
 √ Connected to GitHub
 √ Runner registration complete
 ```
 
 Then verify in GitHub:
+
 - Navigate to your repository
 - Go to **Settings → Actions → Runners**
 - Your runner should appear in the list with status "Idle"
@@ -74,31 +77,32 @@ The `docker compose.yml` is configured with:
 
 ## Key Environment Variables
 
-| Variable | Description |
-|----------|-------------|
-| `ACCESS_TOKEN` | GitHub PAT with `repo` scope (required) |
-| `REPO_URL` | Full URL of the repository, e.g. `https://github.com/owner/repo` |
-| `RUNNER_NAME_PREFIX` | Prefix for the auto-generated runner name |
-| `RUNNER_LABELS` | Comma-separated labels for job targeting |
-| `RUNNER_SCOPE` | Set to `repo` for repository-scoped runners |
-| `GITHUB_HOST` | GitHub instance (github.com for public GitHub) |
-| `RUNNER_WORKDIR` | Working directory for job runs |
-| `RUNNER_GROUP` | Runner group name (optional) |
+| Variable             | Description                                                      |
+| -------------------- | ---------------------------------------------------------------- |
+| `ACCESS_TOKEN`       | GitHub PAT with `repo` scope (required)                          |
+| `REPO_URL`           | Full URL of the repository, e.g. `https://github.com/owner/repo` |
+| `RUNNER_NAME_PREFIX` | Prefix for the auto-generated runner name                        |
+| `RUNNER_LABELS`      | Comma-separated labels for job targeting                         |
+| `RUNNER_SCOPE`       | Set to `repo` for repository-scoped runners                      |
+| `GITHUB_HOST`        | GitHub instance (github.com for public GitHub)                   |
+| `RUNNER_WORKDIR`     | Working directory for job runs                                   |
+| `RUNNER_GROUP`       | Runner group name (optional)                                     |
 
 ## Differences from Organization Runner
 
-| | Org Runner | Repo Runner |
-|---|---|---|
-| `RUNNER_SCOPE` | `org` | `repo` |
-| Registration target | `ORG_NAME` | `REPO_URL` |
-| PAT scope needed | `admin:org`, `repo`, `workflow` | `repo`, `workflow` |
-| Visible in | Org Settings → Actions → Runners | Repo Settings → Actions → Runners |
+|                     | Org Runner                       | Repo Runner                       |
+| ------------------- | -------------------------------- | --------------------------------- |
+| `RUNNER_SCOPE`      | `org`                            | `repo`                            |
+| Registration target | `ORG_NAME`                       | `REPO_URL`                        |
+| PAT scope needed    | `admin:org`, `repo`, `workflow`  | `repo`, `workflow`                |
+| Visible in          | Org Settings → Actions → Runners | Repo Settings → Actions → Runners |
 
 ## Troubleshooting
 
 ### "Invalid configuration provided for url"
 
 This error means:
+
 - Missing or invalid `REPO_URL` (must be the full URL, e.g. `https://github.com/owner/repo`)
 - Missing `ACCESS_TOKEN` or token is expired/invalid
 - Token lacks the required `repo` scope

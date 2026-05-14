@@ -132,6 +132,10 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Mark workspace as git safe directory
+        shell: bash
+        run: git config --file "$RUNNER_TEMP/_github_home/.gitconfig" --add safe.directory /github/workspace
+
       - name: Python Semantic Release
         id: semrel
         uses: python-semantic-release/python-semantic-release@v9

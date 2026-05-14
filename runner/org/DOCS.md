@@ -1,6 +1,6 @@
-# GitHub Actions Self-Hosted Runner
+# GitHub Actions Self-Hosted Runner (Organization)
 
-This directory contains a Docker Compose setup for running a GitHub Actions self-hosted runner using the [`myoung34/github-runner`](https://hub.docker.com/r/myoung34/github-runner) image.
+This directory contains a Docker Compose setup for running a GitHub Actions self-hosted runner scoped to an **entire organization**. It builds a custom image based on [`myoung34/github-runner`](https://hub.docker.com/r/myoung34/github-runner), allowing you to install additional dependencies as needed.
 
 ## Quick Start
 
@@ -13,6 +13,7 @@ You need a GitHub Personal Access Token (PAT) with the following scopes:
 - **`workflow`** (required) — Manage GitHub Actions workflows
 
 Additional requirements:
+
 - **Status**: Token must not be expired
 - **Access**: User must have admin access to the organization
 
@@ -54,12 +55,14 @@ docker compose logs -f github-runner
 ```
 
 You should see output like:
+
 ```
 √ Connected to GitHub
 √ Runner registration complete
 ```
 
 Then verify in GitHub:
+
 - Navigate to your organization settings
 - Go to **Settings → Actions → Runners**
 - Your runner should appear in the list with status "Idle"
@@ -76,23 +79,24 @@ The `docker compose.yml` is configured with:
 
 ## Key Environment Variables
 
-| Variable | Description |
-|----------|-------------|
-| `ACCESS_TOKEN` | GitHub PAT with `admin:org` scope (required) |
-| `ORG_NAME` | Organization name for org-level runners |
-| `RUNNER_NAME` | Unique identifier for this runner |
-| `LABELS` | Comma-separated labels for job targeting |
-| `RUNNER_SCOPE` | Set to `org` for organization runners |
-| `GITHUB_HOST` | GitHub instance (github.com for public GitHub) |
-| `RUNNER_WORKDIR` | Working directory for job runs |
-| `RUNNER_GROUP` | Runner group name (optional) |
+| Variable         | Description                                    |
+| ---------------- | ---------------------------------------------- |
+| `ACCESS_TOKEN`   | GitHub PAT with `admin:org` scope (required)   |
+| `ORG_NAME`       | Organization name for org-level runners        |
+| `RUNNER_NAME`    | Unique identifier for this runner              |
+| `LABELS`         | Comma-separated labels for job targeting       |
+| `RUNNER_SCOPE`   | Set to `org` for organization runners          |
+| `GITHUB_HOST`    | GitHub instance (github.com for public GitHub) |
+| `RUNNER_WORKDIR` | Working directory for job runs                 |
+| `RUNNER_GROUP`   | Runner group name (optional)                   |
 
 ## Troubleshooting
 
 ### "Invalid configuration provided for url"
 
 This error means:
-- Missing or invalid `RUNNER_SCOPE: org` 
+
+- Missing or invalid `RUNNER_SCOPE: org`
 - Missing `ACCESS_TOKEN` or token is expired/invalid
 - Token lacks required scopes: `admin:org`, `repo`, or `workflow`
 
@@ -101,12 +105,14 @@ This error means:
 ### Runner keeps re-registering
 
 This means the persistent volume isn't working:
+
 - Check that `runner-data` volume exists: `docker volume ls | grep runner-data`
 - Ensure `/actions-runner` is properly mounted in the container
 
 ### Access denied errors
 
 Your PAT lacks proper permissions:
+
 - Verify all required scopes are enabled: `admin:org`, `repo`, `workflow`
 - Regenerate the token if scopes are missing
 - Verify the token hasn't expired
