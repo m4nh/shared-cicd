@@ -134,7 +134,9 @@ jobs:
 
       - name: Mark workspace as git safe directory
         shell: bash
-        run: git config --file "$RUNNER_TEMP/_github_home/.gitconfig" --add safe.directory /github/workspace
+        run: |
+          mkdir -p "$RUNNER_TEMP/_github_home"
+          git config --file "$RUNNER_TEMP/_github_home/.gitconfig" --add safe.directory /github/workspace
 
       - name: Python Semantic Release
         id: semrel
