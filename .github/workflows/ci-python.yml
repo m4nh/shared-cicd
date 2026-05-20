@@ -158,7 +158,6 @@ jobs:
           nexus-username: ${{ secrets.NEXUS_USERNAME }}
           nexus-password: ${{ secrets.NEXUS_PASSWORD }}
           nexus-repository-url: ${{ secrets.NEXUS_REPOSITORY_URL }}
-          install-project: "true"
 
   build-wheel:
     name: Build Wheel
