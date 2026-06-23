@@ -39,6 +39,9 @@ services:
       # Optional tuning
       RUNNER_WORKDIR: /tmp/github-runner-1
       RUNNER_GROUP: ${RUNNER_GROUP}
+
+      # Ephemeral: container restarts after each job, preventing state contamination
+      EPHEMERAL: "true"
     volumes:
       - runner-data-1:/actions-runner
       - /var/run/docker.sock:/var/run/docker.sock
