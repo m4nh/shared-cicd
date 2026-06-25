@@ -1,0 +1,30 @@
+x-github-runner: &github-runner
+  build: .
+  restart: unless-stopped
+  env_file:
+    - .env
+  tty: true
+  stdin_open: true
+  runtime: nvidia
+  environment:
+    RUNNER_SCOPE: ${RUNNER_SCOPE}   
+    GITHUB_HOST: github.com
+    REPO_URL: ${REPO_URL}          
+    ORG_NAME: ${ORG_NAME}          
+    ACCESS_TOKEN: ${ACCESS_TOKEN}
+    RUNNER_NAME_PREFIX: ${RUNNER_NAME_PREFIX:-runner}
+    RANDOM_RUNNER_SUFFIX: "true"
+    LABELS: ${RUNNER_LABELS}
+    RUNNER_GROUP: ${RUNNER_GROUP}
+    RUNNER_WORKDIR: /tmp/github-runner
+    EPHEMERAL: "true"
+    NVIDIA_VISIBLE_DEVICES: all
+    NVIDIA_DRIVER_CAPABILITIES: all
+
+  volumes:
+    - /var/run/docker.sock:/var/run/docker.sock
+
+
+services:
+  github-runner:
+    <<: *github-runner
