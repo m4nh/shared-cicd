@@ -138,17 +138,18 @@ jobs:
           mkdir -p "$RUNNER_TEMP/_github_home"
           git config --file "$RUNNER_TEMP/_github_home/.gitconfig" --add safe.directory /github/workspace
 
-      - name: Python Semantic Release
+      - name: Install Python Semantic Release
+        run: |
+          python -m pip install --upgrade pip
+          pip install python-semantic-release==9.*
+
+      - name: Run Python Semantic Release
         id: semrel
-        uses: python-semantic-release/python-semantic-release@v9
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          git_committer_name: "github-actions[bot]"
-          git_committer_email: "github-actions[bot]@users.noreply.github.com"
-          commit: "false"
-          tag: "true"
-          push: "true"
-          vcs_release: "true"
+        run: semantic-release version
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GIT_COMMITTER_NAME: github-actions[bot]
+          GIT_COMMITTER_EMAIL: github-actions[bot]@users.noreply.github.com
 
   docker:
     name: Build and Push Docker Image
