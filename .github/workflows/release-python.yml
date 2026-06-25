@@ -121,22 +121,27 @@ jobs:
     permissions:
       contents: write
     outputs:
-      released: ${{ steps.semrel.outputs.new_release_published }}
-      version: ${{ steps.semrel.outputs.new_release_version }}
-      tag: ${{ steps.semrel.outputs.new_release_git_tag }}
-
+      released: ${{ steps.semrel.outputs.released }}
+      version: ${{ steps.semrel.outputs.version }}
+      tag: ${{ steps.semrel.outputs.tag }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          fetch-tags: true
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Semantic Release
+      - name: Python Semantic Release
         id: semrel
-        uses: cycjimmy/semantic-release-action@v4
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: python-semantic-release/python-semantic-release@v9
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          git_committer_name: "github-actions[bot]"
+          git_committer_email: "github-actions[bot]@users.noreply.github.com"
+          commit: "false"
+          tag: "true"
+          push: "true"
+          vcs_release: "true"
 
   docker:
     name: Build and Push Docker Image
