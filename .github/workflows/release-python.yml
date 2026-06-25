@@ -116,8 +116,7 @@ jobs:
     name: Create Tag and GitHub Release
     runs-on: ${{ inputs.runner }}
     needs: [test]
-    if: always() && (needs.test.result == 'success' || needs.test.result ==
-      'skipped')
+    if: always() && (needs.test.result == 'success' || needs.test.result == 'skipped')
     permissions:
       contents: write
     outputs:
@@ -131,27 +130,26 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11" # Match your project's version
-
-      - name: Install Python Semantic Release
-        run: pip install python-semantic-release
+      # Fixes the CHANGELOG missing error/warning on brand new repositories
+      - name: Ensure Changelog File Exists
+        run: touch CHANGELOG.md
 
       - name: Python Semantic Release
         id: semrel
+        uses: python-semantic-release/python-semantic-release@v9
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          # Configure Git natively on the runner
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-
-          # Equivalent CLI flags matching your inputs:
-          # commit="false", tag="true", push="true", vcs_release="true"
-          semantic-release version --no-commit --tag --push --vcs-release
-
+          # CRITICAL FIX: Forces Git inside the Docker container to trust the directory
+          GIT_CONFIG_COUNT: "1"
+          GIT_CONFIG_KEY_0: "safe.directory"
+          GIT_CONFIG_VALUE_0: "*"
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          git_committer_name: "github-actions[bot]"
+          git_committer_email: "github-actions[bot]@users.noreply.github.com"
+          commit: "false"
+          tag: "true"
+          push: "true"
+          vcs_release: "true"
   docker:
     name: Build and Push Docker Image
     runs-on: ${{ inputs.runner }}
