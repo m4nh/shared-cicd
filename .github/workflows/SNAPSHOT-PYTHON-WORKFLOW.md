@@ -7,6 +7,7 @@ A reusable GitHub Actions workflow that orchestrates development builds on the `
 This workflow automates the full dev-build process:
 
 - **Version Computation**: Extracts the latest release version from VCS and computes an incremental PEP 440 dev version (e.g., `1.2.3.dev4`)
+- **Testing**: Runs pytest against all supported Python versions (matrix)
 - **Docker Build & Push**: Builds and pushes a Docker image tagged with the PEP 440 dev version
 - **Package Build & Publish**: Builds a Python wheel at the PEP 440 dev version and publishes it to Nexus
 
@@ -59,6 +60,8 @@ jobs:
     with:
       runner: "ubuntu-latest"
       version-tag-prefix: "v"
+      tests-enabled: true
+      pytest-args: "-x -v"
       docker-enabled: true
       docker-target-repository: "myorg/myapp"
       docker-registry: "docker.io"
@@ -79,8 +82,17 @@ jobs:
 ```
 start
   │
-  ▼
-compute-version (extract version from tags, compute PEP 440 dev version)
+  ├──────────────────────────────────────────────┐
+  ▼                                              ▼
+extract-versions                          compute-version
+(python-versions, min-version)            (pep440-version, docker-version)
+  │                                              │
+  ▼                                              │
+test (matrix, if tests-enabled)                  │
+  │                                              │
+  ├── passed? ──NO──► skipped                    │
+  │                                              │
+  YES ◄──────────────────────────────────────────┘
   │
   ├──► docker-enabled? ──YES──► docker (build + push)
   │         └──NO──► skipped
@@ -97,6 +109,13 @@ compute-version (extract version from tags, compute PEP 440 dev version)
 | -------------------- | ------ | --------------- | -------------------------------------------------------------------- |
 | `runner`             | string | `ubuntu-latest` | GitHub runner to use                                                 |
 | `version-tag-prefix` | string | `v`             | Prefix used on release tags to extract base version (e.g., `v1.2.3`) |
+
+### Test Configuration
+
+| Input           | Type    | Default | Description                            |
+| --------------- | ------- | ------- | -------------------------------------- |
+| `tests-enabled` | boolean | `true`  | Enable pytest before snapshot          |
+| `pytest-args`   | string  | ``      | Additional arguments to pass to pytest |
 
 ### Docker Configuration
 
@@ -128,6 +147,14 @@ compute-version (extract version from tags, compute PEP 440 dev version)
 
 ## Jobs
 
+### extract-versions
+
+**Purpose**: Reads the supported Python versions from `pyproject.toml`
+
+- Parses `requires-python` (and optionally `classifiers`) to produce the full list of supported versions
+- **Outputs**: `python-versions` (JSON array), `min-version`, `max-version`
+- **Depends on**: nothing (runs first, in parallel with `compute-version`)
+
 ### compute-version
 
 **Purpose**: Computes the PEP 440 dev version for this build
@@ -136,8 +163,17 @@ compute-version (extract version from tags, compute PEP 440 dev version)
 - Counts commits since that tag to determine the build number
 - Computes the PEP 440 dev version (e.g., `1.2.3.dev4`) used by all downstream jobs
 - Does NOT create or push any git tags
-- **Outputs**: `version`, `pep440-version`
-- **Depends on**: nothing (runs first)
+- **Outputs**: `version`, `pep440-version`, `docker-version`
+- **Depends on**: nothing (runs first, in parallel with `extract-versions`)
+
+### test
+
+**Purpose**: Runs the test suite against all supported Python versions
+
+- Runs pytest in a matrix over all versions from `extract-versions`
+- Uses `fail-fast: false` so all Python versions are tested even if one fails
+- **Condition**: Only if `tests-enabled=true`
+- **Depends on**: `extract-versions`
 
 ### docker
 
@@ -146,18 +182,17 @@ compute-version (extract version from tags, compute PEP 440 dev version)
 - Builds Docker image, optionally injecting the PEP 440 version as a build arg (via `docker-version-build-arg`)
 - Tags image with the PEP 440 version (e.g., `org/image:1.2.3.dev4`)
 - Build and push happen on the **same runner** to avoid "image not found" errors
-- **Condition**: Only if `docker-enabled=true`
-- **Depends on**: compute-version
+- **Condition**: Only if `docker-enabled=true` AND tests passed (or were skipped)
+- **Depends on**: `compute-version`, `test`
 
 ### build-and-publish-package
 
 **Purpose**: Builds a Python wheel and publishes it to Nexus
 
-- Extracts supported Python versions from `pyproject.toml`
-- Builds wheel at the PEP 440 dev version (e.g., `1.2.3.dev4`) using the minimum supported Python version
+- Builds wheel at the PEP 440 dev version (e.g., `1.2.3.dev4`) using the minimum supported Python version from `extract-versions`
 - Publishes directly to Nexus (no artifact upload/download needed)
-- **Condition**: Only if `publish-package-enabled=true`
-- **Depends on**: compute-version
+- **Condition**: Only if `publish-package-enabled=true` AND tests passed (or were skipped)
+- **Depends on**: `compute-version`, `extract-versions`, `test`
 
 ## Required Files
 
