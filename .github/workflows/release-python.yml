@@ -115,7 +115,7 @@ jobs:
   release:
     name: Create Tag and GitHub Release
     runs-on: ${{ inputs.runner }}
-    needs: [test]
+    needs: [test, extract-versions] # Added extract-versions to use its python outputs if needed
     if: always() && (needs.test.result == 'success' || needs.test.result == 'skipped')
     permissions:
       contents: write
@@ -134,22 +134,40 @@ jobs:
       - name: Ensure Changelog File Exists
         run: touch CHANGELOG.md
 
-      - name: Python Semantic Release
+      - name: Python Semantic Release (CLI Mode)
         id: semrel
-        uses: python-semantic-release/python-semantic-release@v9
         env:
-          # CRITICAL FIX: Forces Git inside the Docker container to trust the directory
-          GIT_CONFIG_COUNT: "1"
-          GIT_CONFIG_KEY_0: "safe.directory"
-          GIT_CONFIG_VALUE_0: "*"
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          git_committer_name: "github-actions[bot]"
-          git_committer_email: "github-actions[bot]@users.noreply.github.com"
-          commit: "false"
-          tag: "true"
-          push: "true"
-          vcs_release: "true"
+          # The CLI uses GH_TOKEN for authentication
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # 1. Install the tool locally inside the runner environment
+          python3 -m pip install python-semantic-release
+
+          # 2. Configure Git committer identity (what the Docker action used to do automatically)
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # CRITICAL FIX for safe directory inside the runner container
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+          # 3. Determine if a release needs to be made by comparing next vs last version
+          NEXT_VER=$(python3 -m semantic_release version --print)
+          LAST_VER=$(python3 -m semantic_release version --print-last-released)
+
+          if [ "$NEXT_VER" != "$LAST_VER" ]; then
+            echo "released=true" >> "$GITHUB_OUTPUT"
+            echo "version=$NEXT_VER" >> "$GITHUB_OUTPUT"
+            echo "tag=$(python3 -m semantic_release version --print-tag)" >> "$GITHUB_OUTPUT"
+            
+            # 4. Run the release using the CLI equivalents of your parameters
+            # commit: "false" -> --no-commit
+            # tag, push, vcs_release: "true" -> default behavior of the version command
+            python3 -m semantic_release version --no-commit --vcs-release
+          else
+            echo "released=false" >> "$GITHUB_OUTPUT"
+            echo "version=$LAST_VER" >> "$GITHUB_OUTPUT"
+            echo "tag=$(python3 -m semantic_release version --print-last-released-tag)" >> "$GITHUB_OUTPUT"
+          fi
   docker:
     name: Build and Push Docker Image
     runs-on: ${{ inputs.runner }}
