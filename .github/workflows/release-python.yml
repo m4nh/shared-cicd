@@ -141,7 +141,8 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # 1. Install the tool locally inside the runner environment
-          python3 -m pip install python-semantic-release
+          # Using version 9 since the default for allow_zero_version is False in version 10, which is not compatible with the current workflow
+          python3 -m pip install "python-semantic-release<10"
 
           # 2. Configure Git committer identity (what the Docker action used to do automatically)
           git config user.name "github-actions[bot]"
