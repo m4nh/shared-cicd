@@ -47,7 +47,7 @@ on:
         description: "Command to run for linting"
         required: false
         type: string
-        default: "yarn lint-staged"
+        default: "yarn lint"
       prettier-enabled:
         description: "Enable Prettier formatting check/write"
         required: false
@@ -57,7 +57,7 @@ on:
         description: "Command to run for prettier"
         required: false
         type: string
-        default: "yarn prettier --write ."
+        default: "yarn prettier --check ."
       npm-scope:
         description: "Private npm scope to authenticate during install (e.g., 'myorg')."
         required: false
