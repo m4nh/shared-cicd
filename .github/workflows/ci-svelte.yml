@@ -171,16 +171,10 @@ jobs:
           node-version: ${{ inputs.node-version }}
       - name: Enable Corepack
         run: corepack enable
-      - name: Configure Nexus auth (.npmrc)
+      - name: Configure Nexus registry auth
         if: inputs.npm-scope != ''
         working-directory: ${{ inputs.package-path }}
-        run: |
-          cat <<EOF > .npmrc
-          //assex.eyecan.ai/repository/npmjs/:username=${NEXUS_USERNAME}
-          //assex.eyecan.ai/repository/npmjs/:_password=$(printf '%s' "$NEXUS_PASSWORD" | base64 -w 0)
-          //assex.eyecan.ai/repository/npmjs/:email=ci@example.com
-          //assex.eyecan.ai/repository/npmjs/:always-auth=true
-          EOF
+        run: yarn config set "npmScopes.$NPM_SCOPE.npmAuthIdent" "$(printf '%s:%s' "$NEXUS_USERNAME" "$NEXUS_PASSWORD" | base64 -w 0)"
         env:
           NPM_SCOPE: ${{ inputs.npm-scope }}
           NEXUS_USERNAME: ${{ secrets.NEXUS_USERNAME }}
