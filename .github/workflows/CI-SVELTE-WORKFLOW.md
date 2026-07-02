@@ -99,11 +99,13 @@ jobs:
 ### `svelte-check`
 Runs Svelte compiler checks (`svelte-check`) to validate component syntax and type safety.
 - Conditional: Controlled by `svelte-check-enabled` input
+- Includes: `yarn build` (to generate `.svelte-kit/tsconfig.json` and other build artifacts)
 - Default command: `yarn svelte-check`
 
 ### `type-check`
 Runs TypeScript type checking (`tsc`) to catch type errors.
 - Conditional: Controlled by `tsc-enabled` input
+- Includes: `yarn build` (to generate `.svelte-kit/tsconfig.json` and other build artifacts)
 - Default command: `yarn tsc --noEmit`
 
 ### `lint`

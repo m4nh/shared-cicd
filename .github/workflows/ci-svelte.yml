@@ -95,6 +95,9 @@ jobs:
       - name: Install dependencies
         working-directory: ${{ inputs.package-path }}
         run: yarn install --immutable
+      - name: Build
+        working-directory: ${{ inputs.package-path }}
+        run: yarn build
       - name: Run svelte-check
         working-directory: ${{ inputs.package-path }}
         run: ${{ inputs.svelte-check-command }}
@@ -122,6 +125,9 @@ jobs:
       - name: Install dependencies
         working-directory: ${{ inputs.package-path }}
         run: yarn install --immutable
+      - name: Build
+        working-directory: ${{ inputs.package-path }}
+        run: yarn build
       - name: Run tsc
         working-directory: ${{ inputs.package-path }}
         run: ${{ inputs.tsc-command }}
