@@ -1,0 +1,181 @@
+name: CI - Svelte
+
+on:
+  workflow_call:
+    inputs:
+      runner:
+        description: "Runner to use"
+        required: false
+        type: string
+        default: "ubuntu-latest"
+      node-version:
+        description: "Node.js version to use"
+        required: false
+        type: string
+        default: "20"
+      package-path:
+        description: "Path to the directory containing package.json"
+        required: false
+        type: string
+        default: "."
+      svelte-check-enabled:
+        description: "Enable svelte-check"
+        required: false
+        type: boolean
+        default: true
+      svelte-check-command:
+        description: "Command to run for svelte-check"
+        required: false
+        type: string
+        default: "yarn svelte-check"
+      tsc-enabled:
+        description: "Enable TypeScript type checking"
+        required: false
+        type: boolean
+        default: true
+      tsc-command:
+        description: "Command to run for type checking"
+        required: false
+        type: string
+        default: "yarn tsc --noEmit"
+      lint-enabled:
+        description: "Enable ESLint"
+        required: false
+        type: boolean
+        default: true
+      lint-command:
+        description: "Command to run for linting"
+        required: false
+        type: string
+        default: "yarn lint-staged"
+      prettier-enabled:
+        description: "Enable Prettier formatting check/write"
+        required: false
+        type: boolean
+        default: true
+      prettier-command:
+        description: "Command to run for prettier"
+        required: false
+        type: string
+        default: "yarn prettier --write ."
+      npm-scope:
+        description: "Private npm scope to authenticate during install (e.g., 'myorg')."
+        required: false
+        type: string
+        default: ""
+    secrets:
+      NEXUS_USERNAME:
+        description: "Nexus username for private package installation"
+        required: false
+      NEXUS_PASSWORD:
+        description: "Nexus password for private package installation"
+        required: false
+
+jobs:
+  svelte-check:
+    name: Svelte Check
+    runs-on: ${{ inputs.runner }}
+    if: inputs.svelte-check-enabled
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+      - name: Enable Corepack
+        run: corepack enable
+      - name: Configure Nexus registry auth
+        if: inputs.npm-scope != ''
+        working-directory: ${{ inputs.package-path }}
+        env:
+          NPM_SCOPE: ${{ inputs.npm-scope }}
+          NEXUS_USERNAME: ${{ secrets.NEXUS_USERNAME }}
+          NEXUS_PASSWORD: ${{ secrets.NEXUS_PASSWORD }}
+        run: yarn config set "npmScopes.$NPM_SCOPE.npmAuthIdent" "$(printf '%s:%s' "$NEXUS_USERNAME" "$NEXUS_PASSWORD" | base64 -w 0)"
+      - name: Install dependencies
+        working-directory: ${{ inputs.package-path }}
+        run: yarn install --immutable
+      - name: Run svelte-check
+        working-directory: ${{ inputs.package-path }}
+        run: ${{ inputs.svelte-check-command }}
+
+  type-check:
+    name: Type Check (tsc)
+    runs-on: ${{ inputs.runner }}
+    if: inputs.tsc-enabled
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+      - name: Enable Corepack
+        run: corepack enable
+      - name: Configure Nexus registry auth
+        if: inputs.npm-scope != ''
+        working-directory: ${{ inputs.package-path }}
+        env:
+          NPM_SCOPE: ${{ inputs.npm-scope }}
+          NEXUS_USERNAME: ${{ secrets.NEXUS_USERNAME }}
+          NEXUS_PASSWORD: ${{ secrets.NEXUS_PASSWORD }}
+        run: yarn config set "npmScopes.$NPM_SCOPE.npmAuthIdent" "$(printf '%s:%s' "$NEXUS_USERNAME" "$NEXUS_PASSWORD" | base64 -w 0)"
+      - name: Install dependencies
+        working-directory: ${{ inputs.package-path }}
+        run: yarn install --immutable
+      - name: Run tsc
+        working-directory: ${{ inputs.package-path }}
+        run: ${{ inputs.tsc-command }}
+
+  lint:
+    name: Lint (ESLint)
+    runs-on: ${{ inputs.runner }}
+    if: inputs.lint-enabled
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+      - name: Enable Corepack
+        run: corepack enable
+      - name: Configure Nexus registry auth
+        if: inputs.npm-scope != ''
+        working-directory: ${{ inputs.package-path }}
+        env:
+          NPM_SCOPE: ${{ inputs.npm-scope }}
+          NEXUS_USERNAME: ${{ secrets.NEXUS_USERNAME }}
+          NEXUS_PASSWORD: ${{ secrets.NEXUS_PASSWORD }}
+        run: yarn config set "npmScopes.$NPM_SCOPE.npmAuthIdent" "$(printf '%s:%s' "$NEXUS_USERNAME" "$NEXUS_PASSWORD" | base64 -w 0)"
+      - name: Install dependencies
+        working-directory: ${{ inputs.package-path }}
+        run: yarn install --immutable
+      - name: Run Lint
+        working-directory: ${{ inputs.package-path }}
+        run: ${{ inputs.lint-command }}
+
+  prettier:
+    name: Prettier Format Check
+    runs-on: ${{ inputs.runner }}
+    if: inputs.prettier-enabled
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+      - name: Enable Corepack
+        run: corepack enable
+      - name: Configure Nexus registry auth
+        if: inputs.npm-scope != ''
+        working-directory: ${{ inputs.package-path }}
+        env:
+          NPM_SCOPE: ${{ inputs.npm-scope }}
+          NEXUS_USERNAME: ${{ secrets.NEXUS_USERNAME }}
+          NEXUS_PASSWORD: ${{ secrets.NEXUS_PASSWORD }}
+        run: yarn config set "npmScopes.$NPM_SCOPE.npmAuthIdent" "$(printf '%s:%s' "$NEXUS_USERNAME" "$NEXUS_PASSWORD" | base64 -w 0)"
+      - name: Install dependencies
+        working-directory: ${{ inputs.package-path }}
+        run: yarn install --immutable
+      - name: Run Prettier
+        working-directory: ${{ inputs.package-path }}
+        run: ${{ inputs.prettier-command }}
