@@ -9,11 +9,22 @@ on:
         type: string
         default: "ubuntu-latest"
       version-tag-prefix:
-        description: "Prefix used on release tags to extract the base version (e.g., 'v'
+        description:
+          "Prefix used on release tags to extract the base version (e.g., 'v'
           for 'v1.2.3')"
         required: false
         type: string
         default: "v"
+      tests-enabled:
+        description: "Enable pytest before snapshot"
+        required: false
+        type: boolean
+        default: true
+      pytest-args:
+        description: "Additional arguments to pass to pytest"
+        required: false
+        type: string
+        default: ""
       docker-enabled:
         description: "Enable Docker image build and push"
         required: false
@@ -72,6 +83,20 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  extract-versions:
+    name: Extract Python Versions
+    runs-on: ${{ inputs.runner }}
+    outputs:
+      python-versions: ${{ steps.extract.outputs.versions-json }}
+      min-version: ${{ steps.extract.outputs.min-version }}
+      max-version: ${{ steps.extract.outputs.max-version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Extract Python versions
+        uses: m4nh/shared-cicd/actions/python/extract-python-versions@main
+        id: extract
+
   compute-version:
     name: Compute Version
     runs-on: ${{ inputs.runner }}
@@ -87,11 +112,32 @@ jobs:
         with:
           tag-prefix: ${{ inputs.version-tag-prefix }}
 
+  test:
+    name: Test (Python ${{ matrix.python-version }})
+    runs-on: ${{ inputs.runner }}
+    if: inputs.tests-enabled
+    needs: extract-versions
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ${{ fromJson(needs.extract-versions.outputs.python-versions) }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run pytest
+        uses: m4nh/shared-cicd/actions/python/run-pytest@main
+        with:
+          python-version: ${{ matrix.python-version }}
+          pytest-args: ${{ inputs.pytest-args }}
+          nexus-username: ${{ secrets.NEXUS_USERNAME }}
+          nexus-password: ${{ secrets.NEXUS_PASSWORD }}
+          nexus-repository-url: ${{ secrets.NEXUS_REPOSITORY_URL }}
+
   docker:
     name: Build and Push Docker Image
     runs-on: ${{ inputs.runner }}
-    needs: compute-version
-    if: inputs.docker-enabled
+    needs: [compute-version, test]
+    if: inputs.docker-enabled && always() && (needs.test.result == 'success' || needs.test.result == 'skipped')
 
     steps:
       - name: Checkout
@@ -136,23 +182,17 @@ jobs:
   build-and-publish-package:
     name: Build and Publish Package
     runs-on: ${{ inputs.runner }}
-    needs: compute-version
-    if: inputs.publish-package-enabled
+    needs: [compute-version, extract-versions, test]
+    if: inputs.publish-package-enabled && always() && (needs.test.result == 'success' || needs.test.result == 'skipped')
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Extract Python Versions
-        uses: m4nh/shared-cicd/actions/python/extract-python-versions@main
-        id: extract
 
       - name: Build Wheel
         uses: m4nh/shared-cicd/actions/python/build-wheel@main
         with:
-          python-version: ${{ steps.extract.outputs.min-version }}
+          python-version: ${{ needs.extract-versions.outputs.min-version }}
           version: ${{ needs.compute-version.outputs.pep440-version }}
 
       - name: Publish Package

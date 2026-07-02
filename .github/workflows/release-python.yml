@@ -130,14 +130,12 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      # Fixes the CHANGELOG missing error/warning on brand new repositories
       - name: Ensure Changelog File Exists
         run: touch CHANGELOG.md
 
       - name: Python Semantic Release (CLI Mode)
         id: semrel
         env:
-          # The CLI uses GH_TOKEN for authentication
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # 1. Install the tool locally inside the runner environment
