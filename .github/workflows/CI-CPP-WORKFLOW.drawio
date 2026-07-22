@@ -1,0 +1,123 @@
+<mxfile host="65bd71144e">
+    <diagram name="CI C++ Workflow" id="diagram-1">
+        <mxGraphModel dx="869" dy="1579" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="800" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="22" style="edgeStyle=orthogonalEdgeStyle;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;rounded=0;" parent="1" source="start" target="cond-format" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="700" y="160"/>
+                            <mxPoint x="240" y="160"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="23" style="edgeStyle=orthogonalEdgeStyle;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;rounded=0;" parent="1" source="start" target="cond-test" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="700" y="160"/>
+                            <mxPoint x="700" y="160"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="24" style="edgeStyle=orthogonalEdgeStyle;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;rounded=0;" parent="1" source="start" target="cond-docker" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="700" y="160"/>
+                            <mxPoint x="1160" y="160"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="start" value="🚀 Workflow Triggered" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1f5ff;strokeColor=#01579b;strokeWidth=3" parent="1" vertex="1">
+                    <mxGeometry x="600" y="-10" width="200" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="cond-format" value="format-check-enabled?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#e0f2f1;strokeColor=#004d40" parent="1" vertex="1">
+                    <mxGeometry x="180" y="200" width="120" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="27" style="edgeStyle=orthogonalEdgeStyle;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;rounded=0;" parent="1" source="cond-format" target="format-job" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="28" value="true" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="27" vertex="1" connectable="0">
+                    <mxGeometry x="-0.2" y="-1" relative="1" as="geometry">
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="format-job" value="Format Check Job&lt;br&gt;📝 Install clang-format&lt;br&gt;🔍 Check .cpp/.hpp files" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff9c4;strokeColor=#f57f17" parent="1" vertex="1">
+                    <mxGeometry x="160" y="350" width="160" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="cond-test" value="tests-enabled?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#e0f2f1;strokeColor=#004d40" parent="1" vertex="1">
+                    <mxGeometry x="640" y="200" width="120" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="29" style="edgeStyle=orthogonalEdgeStyle;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;rounded=0;" parent="1" source="cond-test" target="test-job" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="30" value="true" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="29" vertex="1" connectable="0">
+                    <mxGeometry x="-0.2" y="-1" relative="1" as="geometry">
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="test-job" value="Build &amp; Test Job&lt;br&gt;📦 Install dependencies&lt;br&gt;🔧 CMake configure&lt;br&gt;🏗️ Build project&lt;br&gt;✅ Run CTest" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8e6c9;strokeColor=#2e7d32" parent="1" vertex="1">
+                    <mxGeometry x="610" y="350" width="180" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="cond-docker" value="docker-build-enabled?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#e0f2f1;strokeColor=#004d40" parent="1" vertex="1">
+                    <mxGeometry x="1100" y="200" width="120" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="31" style="edgeStyle=orthogonalEdgeStyle;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;rounded=0;" parent="1" source="cond-docker" target="docker-job" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="32" value="true" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="31" vertex="1" connectable="0">
+                    <mxGeometry x="-0.2" y="-1" relative="1" as="geometry">
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="docker-job" value="Docker Build Job&lt;br&gt;🐳 Build Docker image&lt;br&gt;🏷️ Tag image" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1bee7;strokeColor=#6a1b9a" parent="1" vertex="1">
+                    <mxGeometry x="1070" y="350" width="180" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="end" value="✅ Workflow Complete" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c5e1a5;strokeColor=#33691e;strokeWidth=3" parent="1" vertex="1">
+                    <mxGeometry x="600" y="520" width="200" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="33" style="edgeStyle=orthogonalEdgeStyle;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;rounded=0;" parent="1" source="format-job" target="end" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="240" y="550"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="34" style="edgeStyle=orthogonalEdgeStyle;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;rounded=0;" parent="1" source="test-job" target="end" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="35" style="edgeStyle=orthogonalEdgeStyle;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;rounded=0;" parent="1" source="docker-job" target="end" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1160" y="550"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="legend-box" value="Job Types" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;align=left;verticalAlign=top;fontStyle=1" parent="1" vertex="1">
+                    <mxGeometry x="40" y="500" width="280" height="180" as="geometry"/>
+                </mxCell>
+                <mxCell id="legend-1" value="Format Check" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff9c4;strokeColor=#f57f17" parent="1" vertex="1">
+                    <mxGeometry x="60" y="540" width="120" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="legend-2" value="Build &amp; Test" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8e6c9;strokeColor=#2e7d32" parent="1" vertex="1">
+                    <mxGeometry x="60" y="580" width="120" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="legend-3" value="Docker Build" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1bee7;strokeColor=#6a1b9a" parent="1" vertex="1">
+                    <mxGeometry x="60" y="620" width="120" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="legend-desc-1" value="Code formatting validation" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;" parent="1" vertex="1">
+                    <mxGeometry x="190" y="540" width="120" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="legend-desc-2" value="CMake build + CTest run" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;" parent="1" vertex="1">
+                    <mxGeometry x="190" y="580" width="120" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="legend-desc-3" value="Docker image creation" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;" parent="1" vertex="1">
+                    <mxGeometry x="190" y="620" width="120" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="note" value="All jobs run in parallel" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffe0b2;strokeColor=#e65100;fontStyle=2" parent="1" vertex="1">
+                    <mxGeometry x="620" y="90" width="160" height="30" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>
