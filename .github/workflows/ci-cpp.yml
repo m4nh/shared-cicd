@@ -110,6 +110,7 @@ jobs:
             libxext-dev \
             libxrandr-dev \
             libxi-dev \
+            libunwind-dev \
             libceres-dev \
             libsuitesparse-dev \
             libgoogle-glog-dev \
