@@ -58,6 +58,18 @@ on:
         required: false
         type: string
         default: ""
+      system-dependencies:
+        description: "System dependencies to install (space or newline-separated package list)"
+        required: false
+        type: string
+        default: |
+          build-essential wget ca-certificates git pkg-config
+          libopencv-dev nlohmann-json3-dev libboost-all-dev libeigen3-dev
+          python3-numpy python3-dev libsqlite3-dev
+          libgl1-mesa-dev libglu1-mesa-dev libx11-dev libxext-dev libxrandr-dev libxi-dev
+          libunwind-dev libceres-dev libsuitesparse-dev
+          libgoogle-glog-dev libgflags-dev libcgal-dev libcgal-qt5-dev libmetis-dev
+          libfreeimage-dev libglew-dev libopenimageio-dev openimageio-tools libyaml-cpp-dev
 
 jobs:
   format-check:
@@ -91,38 +103,10 @@ jobs:
         shell: bash
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends \
-            build-essential \
-            wget \
-            ca-certificates \
-            git \
-            pkg-config \
-            libopencv-dev \
-            nlohmann-json3-dev \
-            libboost-all-dev \
-            libeigen3-dev \
-            python3-numpy \
-            python3-dev \
-            libsqlite3-dev \
-            libgl1-mesa-dev \
-            libglu1-mesa-dev \
-            libx11-dev \
-            libxext-dev \
-            libxrandr-dev \
-            libxi-dev \
-            libunwind-dev \
-            libceres-dev \
-            libsuitesparse-dev \
-            libgoogle-glog-dev \
-            libgflags-dev \
-            libcgal-dev \
-            libcgal-qt5-dev \
-            libmetis-dev \
-            libfreeimage-dev \
-            libglew-dev \
-            libopenimageio-dev \
-            openimageio-tools \
-            libyaml-cpp-dev
+          # Convert multiline/space-separated list to proper apt-get format
+          DEPS="${{ inputs.system-dependencies }}"
+          DEPS=$(echo "$DEPS" | tr '\n' ' ' | xargs)
+          sudo apt-get install -y --no-install-recommends $DEPS
 
       - name: Install CMake 3.29.8
         shell: bash
