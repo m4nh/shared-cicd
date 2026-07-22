@@ -1,0 +1,191 @@
+name: Release - C++
+
+on:
+  workflow_call:
+    inputs:
+      runner:
+        description: "Runner to use"
+        required: false
+        type: string
+        default: "ubuntu-22.04"
+      tests-enabled:
+        description: "Enable CMake build and unit tests before release"
+        required: false
+        type: boolean
+        default: true
+      cmake-build-type:
+        description: "CMake build type (Release, Debug, RelWithDebInfo)"
+        required: false
+        type: string
+        default: "Release"
+      cmake-extra-args:
+        description: "Additional CMake configuration arguments"
+        required: false
+        type: string
+        default: ""
+      ctest-args:
+        description: "Additional arguments to pass to ctest"
+        required: false
+        type: string
+        default: "--output-on-failure"
+      docker-enabled:
+        description: "Enable Docker image build and push"
+        required: false
+        type: boolean
+        default: true
+      docker-target-repository:
+        description: "Target Docker repository (e.g., org/image)"
+        required: false
+        type: string
+        default: ""
+      docker-registry:
+        description: "Docker registry URL (e.g., docker.io, ghcr.io)"
+        required: false
+        type: string
+        default: "docker.io"
+      docker-dockerfile:
+        description: "Path to Dockerfile (e.g., dockerfiles/Dockerfile)"
+        required: false
+        type: string
+        default: "Dockerfile"
+      docker-context:
+        description: "Docker build context directory"
+        required: false
+        type: string
+        default: "."
+      docker-build-args:
+        description: "Docker build arguments (space-separated, e.g., '--build-arg ENV=prod')"
+        required: false
+        type: string
+        default: ""
+      system-dependencies:
+        description: "System dependencies to install (space or newline-separated package list)"
+        required: false
+        type: string
+        default: |
+          build-essential wget ca-certificates git pkg-config
+          libopencv-dev nlohmann-json3-dev libboost-all-dev libeigen3-dev
+          python3-numpy python3-dev libsqlite3-dev
+          libgl1-mesa-dev libglu1-mesa-dev libx11-dev libxext-dev libxrandr-dev libxi-dev
+          libunwind-dev libceres-dev libsuitesparse-dev
+          libgoogle-glog-dev libgflags-dev libcgal-dev libcgal-qt5-dev libmetis-dev
+          libfreeimage-dev libglew-dev libopenimageio-dev openimageio-tools libyaml-cpp-dev
+    secrets:
+      DOCKER_USERNAME:
+        description: "Docker registry username"
+        required: false
+      DOCKER_PASSWORD:
+        description: "Docker registry password or token"
+        required: false
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  test:
+    name: Build & Test
+    runs-on: ${{ inputs.runner }}
+    if: inputs.tests-enabled
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        shell: bash
+        run: |
+          sudo apt-get update
+          # Convert multiline/space-separated list to proper apt-get format
+          DEPS="${{ inputs.system-dependencies }}"
+          DEPS=$(echo "$DEPS" | tr '\n' ' ' | xargs)
+          sudo apt-get install -y --no-install-recommends $DEPS
+
+      - name: Install CMake 3.29.8
+        shell: bash
+        run: |
+          CMAKE_VERSION=3.29.8
+          wget -q https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}-linux-x86_64.tar.gz -O /tmp/cmake.tar.gz
+          sudo tar --strip-components=1 -xzf /tmp/cmake.tar.gz -C /usr/local
+          rm /tmp/cmake.tar.gz
+          cmake --version
+
+      - name: Configure CMake
+        shell: bash
+        run: |
+          cmake -B build \
+            -DCMAKE_BUILD_TYPE=${{ inputs.cmake-build-type }} \
+            -DCALIBRY_BUILD_TESTS=ON \
+            ${{ inputs.cmake-extra-args }}
+
+      - name: Build
+        shell: bash
+        run: |
+          cmake --build build -j$(nproc)
+
+      - name: Run tests
+        shell: bash
+        run: |
+          ctest --test-dir build ${{ inputs.ctest-args }}
+
+  release:
+    name: Create Tag and GitHub Release
+    runs-on: ${{ inputs.runner }}
+    needs: test
+    if: always() && (needs.test.result == 'success' || needs.test.result == 'skipped')
+    permissions:
+      contents: write
+    outputs:
+      released: ${{ steps.semrel.outputs.new_release_published }}
+      version: ${{ steps.semrel.outputs.new_release_version }}
+      tag: ${{ steps.semrel.outputs.new_release_git_tag }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Semantic Release
+        id: semrel
+        uses: cycjimmy/semantic-release-action@v4
+        with:
+          extra_plugins: |
+            @semantic-release/commit-analyzer
+            @semantic-release/release-notes-generator
+            @semantic-release/github
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  docker:
+    name: Build and Push Docker Image
+    runs-on: ${{ inputs.runner }}
+    needs: release
+    if: inputs.docker-enabled && needs.release.outputs.released == 'true'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build Docker Image
+        uses: m4nh/shared-cicd/actions/docker/build-docker-image@main
+        with:
+          dockerfile: ${{ inputs.docker-dockerfile }}
+          context: ${{ inputs.docker-context }}
+          tags: "release-image:${{ needs.release.outputs.version }}"
+          version: ${{ needs.release.outputs.version }}
+          build-args: ${{ inputs.docker-build-args }}
+
+      - name: Push Docker Image
+        uses: m4nh/shared-cicd/actions/docker/push-docker@main
+        with:
+          docker-username: ${{ secrets.DOCKER_USERNAME }}
+          docker-password: ${{ secrets.DOCKER_PASSWORD }}
+          image-name: release-image
+          image-tag: ${{ needs.release.outputs.version }}
+          target-repository: ${{ inputs.docker-target-repository }}
+          registry: ${{ inputs.docker-registry }}
