@@ -120,6 +120,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Update package.json version
+        run: npm version ${{ needs.release.outputs.version }} --no-git-tag-version
+
       - name: Prepare Docker build secret
         if: inputs.npm-scope != ''
         shell: bash
