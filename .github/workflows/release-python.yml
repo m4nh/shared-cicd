@@ -140,7 +140,8 @@ jobs:
         run: |
           # 1. Install the tool locally inside the runner environment
           # Using version 9 since the default for allow_zero_version is False in version 10, which is not compatible with the current workflow
-          python3 -m pip install "python-semantic-release<10"
+          # Pin gitpython<3.1.41 to avoid Actor.name_email_regex compatibility issue with python-semantic-release 9.x
+          python3 -m pip install "python-semantic-release<10" "gitpython<3.1.41"
 
           # 2. Configure Git committer identity (what the Docker action used to do automatically)
           git config user.name "github-actions[bot]"
@@ -157,7 +158,7 @@ jobs:
             echo "released=true" >> "$GITHUB_OUTPUT"
             echo "version=$NEXT_VER" >> "$GITHUB_OUTPUT"
             echo "tag=$(python3 -m semantic_release version --print-tag)" >> "$GITHUB_OUTPUT"
-            
+
             # 4. Run the release using the CLI equivalents of your parameters
             # commit: "false" -> --no-commit
             # tag, push, vcs_release: "true" -> default behavior of the version command

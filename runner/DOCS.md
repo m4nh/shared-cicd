@@ -100,3 +100,42 @@ Org:
 
 - shared across repos
 - centralized compute pool
+
+## Troubleshooting
+
+### DNS/Network Issues During Build
+
+If `docker compose up` fails with DNS resolution errors (e.g., "Temporary failure resolving 'archive.ubuntu.com'"), build the image manually with host networking:
+
+```bash
+# Stop any running containers
+docker compose down
+
+# Build with host networking
+DOCKER_BUILDKIT=1 docker build --network=host -t runner-github-runner -f Dockerfile .
+
+# Start containers
+docker compose up -d --scale github-runner=4
+```
+
+### Missing libGL.so.1 Error
+
+If your CI jobs fail with:
+
+```
+ImportError: libGL.so.1: cannot open shared object file: No such file or directory
+```
+
+The Dockerfile includes `libgl1-mesa-glx` to fix this. Verify it's installed:
+
+```bash
+docker exec runner-github-runner-1 ldconfig -p | grep libGL
+```
+
+### Rebuilding from Scratch
+
+```bash
+docker compose down
+docker compose build --no-cache
+docker compose up -d --scale github-runner=4
+```

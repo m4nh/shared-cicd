@@ -7,10 +7,10 @@ x-github-runner: &github-runner
   stdin_open: true
   runtime: nvidia
   environment:
-    RUNNER_SCOPE: ${RUNNER_SCOPE}   
+    RUNNER_SCOPE: ${RUNNER_SCOPE}
     GITHUB_HOST: github.com
-    REPO_URL: ${REPO_URL}          
-    ORG_NAME: ${ORG_NAME}          
+    REPO_URL: ${REPO_URL}
+    ORG_NAME: ${ORG_NAME}
     ACCESS_TOKEN: ${ACCESS_TOKEN}
     RUNNER_NAME_PREFIX: ${RUNNER_NAME_PREFIX:-runner}
     RANDOM_RUNNER_SUFFIX: "true"
@@ -20,6 +20,7 @@ x-github-runner: &github-runner
     EPHEMERAL: "true"
     NVIDIA_VISIBLE_DEVICES: all
     NVIDIA_DRIVER_CAPABILITIES: all
+    DISABLE_AUTO_UPDATE: "true"
 
   volumes:
     - /var/run/docker.sock:/var/run/docker.sock
@@ -28,3 +29,10 @@ x-github-runner: &github-runner
 services:
   github-runner:
     <<: *github-runner
+
+  watchtower:
+    image: containrrr/watchtower
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: --interval 43200 github-runner
