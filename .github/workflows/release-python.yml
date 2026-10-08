@@ -172,7 +172,7 @@ jobs:
     name: Build and Push Docker Image
     runs-on: ${{ inputs.runner }}
     needs: release
-    if: inputs.docker-enabled && needs.release.outputs.released == 'true'
+    if: ${{ !cancelled() && inputs.docker-enabled && needs.release.result == 'success' && needs.release.outputs.released == 'true' }}
 
     steps:
       - name: Checkout
@@ -218,7 +218,7 @@ jobs:
     name: Build and Publish Package
     runs-on: ${{ inputs.runner }}
     needs: [release, extract-versions]
-    if: inputs.publish-package-enabled && needs.release.outputs.released == 'true'
+    if: ${{ !cancelled() && inputs.publish-package-enabled && needs.release.result == 'success' && needs.extract-versions.result == 'success' && needs.release.outputs.released == 'true' }}
 
     steps:
       - name: Checkout
