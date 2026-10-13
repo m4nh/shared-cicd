@@ -25,14 +25,29 @@ x-github-runner: &github-runner
   volumes:
     - /var/run/docker.sock:/var/run/docker.sock
 
+  # If the runner loses GitHub it exits and the entrypoint tries to deregister.
+  # That can hang forever while the container still looks "Up", so we check
+  # the listener is actually running and let autoheal restart the container.
+  healthcheck:
+    test: ["CMD", "pgrep", "-f", "^\\./bin/Runner\\.Listener run"]
+    interval: 1m
+    timeout: 10s
+    retries: 5
+    start_period: 3m
+  labels:
+    autoheal: "true"
+
 
 services:
   github-runner:
     <<: *github-runner
 
-  watchtower:
-    image: containrrr/watchtower
+  # Docker does not restart unhealthy containers on its own.
+  autoheal:
+    image: willfarrell/autoheal:1.2.0
     restart: unless-stopped
+    environment:
+      AUTOHEAL_CONTAINER_LABEL: autoheal
+      AUTOHEAL_INTERVAL: 60
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-    command: --interval 43200 github-runner

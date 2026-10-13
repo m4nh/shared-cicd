@@ -139,3 +139,13 @@ docker compose down
 docker compose build --no-cache
 docker compose up -d --scale github-runner=4
 ```
+
+### Runners Stuck After a Network Outage
+
+If the runner loses its connection to GitHub, it exits and tries to deregister. When the network is down, that deregistration can hang indefinitely while the container still shows as `Up`. Each runner has a healthcheck that verifies `Runner.Listener run` is alive, and the `autoheal` service restarts any container that becomes unhealthy (after about 5 minutes).
+
+```bash
+docker ps --filter name=runner- --format 'table {{.Names}}\t{{.Status}}'
+```
+
+Runners that never finished deregistering stay listed as offline under the repo's Settings → Actions → Runners; remove them there.
