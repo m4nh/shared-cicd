@@ -133,6 +133,13 @@ jobs:
       - name: Ensure Changelog File Exists
         run: touch CHANGELOG.md
 
+      # The self-hosted runner image only ships python3 (3.8), without a `python`
+      # alias, and the project's build_command calls `python -m build`.
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ needs.extract-versions.outputs.min-version }}
+
       - name: Python Semantic Release (CLI Mode)
         id: semrel
         env:

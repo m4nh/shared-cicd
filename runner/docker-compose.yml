@@ -1,8 +1,13 @@
 x-github-runner: &github-runner
-  build: .
+  # Host network: the default build network can't resolve DNS on this machine.
+  build:
+    context: .
+    network: host
   restart: unless-stopped
+  # Per-repo values come from `--env-file`, so .env is optional.
   env_file:
-    - .env
+    - path: .env
+      required: false
   tty: true
   stdin_open: true
   runtime: nvidia

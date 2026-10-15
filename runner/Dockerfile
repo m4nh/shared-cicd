@@ -8,9 +8,11 @@ FROM myoung34/github-runner:latest
 RUN for i in 1 2 3; do \
   apt-get update && \
   apt-get install -y --no-install-recommends --fix-missing \
-  ffmpeg libsm6 libxext6 libgl1-mesa-glx && \
-  break || sleep 5; \
-  done && \
+  ffmpeg libsm6 libxext6 libgl1 && \
+  ok=1 && break; \
+  sleep 5; \
+  done; \
+  [ "$ok" = 1 ] || exit 1; \
   rm -rf /var/lib/apt/lists/*
 
 
