@@ -145,9 +145,13 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # 1. Install the tool locally inside the runner environment
+          # 1. Install the tool in a throwaway venv: self-hosted runners reuse the
+          # Python toolcache across jobs, so a global install leaks into later jobs
+          # (e.g. pip-audit flagging the pinned gitpython).
           # Using version 9 since the default for allow_zero_version is False in version 10, which is not compatible with the current workflow
           # Pin gitpython<3.1.41 to avoid Actor.name_email_regex compatibility issue with python-semantic-release 9.x
+          python3 -m venv "$RUNNER_TEMP/semrel-venv"
+          source "$RUNNER_TEMP/semrel-venv/bin/activate"
           python3 -m pip install "python-semantic-release<10" "gitpython<3.1.41"
 
           # 2. Configure Git committer identity (what the Docker action used to do automatically)

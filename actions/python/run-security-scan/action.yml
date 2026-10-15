@@ -51,6 +51,15 @@ runs:
       with:
         python-version: ${{ inputs.python-version }}
 
+    # pip-audit scans the whole environment. Self-hosted runners reuse the
+    # Python toolcache across jobs, so use a fresh venv to audit only this project.
+    - name: Create isolated venv
+      shell: bash
+      run: |
+        python3 -m venv "$RUNNER_TEMP/security-scan-venv"
+        echo "VIRTUAL_ENV=$RUNNER_TEMP/security-scan-venv" >> "$GITHUB_ENV"
+        echo "$RUNNER_TEMP/security-scan-venv/bin" >> "$GITHUB_PATH"
+
     - name: Upgrade pip
       shell: bash
       run: python3 -m pip install --upgrade pip setuptools
