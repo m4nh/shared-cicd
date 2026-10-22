@@ -120,6 +120,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Set up Node.js ${{ inputs.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+
       - name: Update package.json version
         run: npm version ${{ needs.release.outputs.version }} --no-git-tag-version
 
