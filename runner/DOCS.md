@@ -36,15 +36,20 @@ ACCESS_TOKEN=ghp_xxxxx...
 
 ### 3. Start runner
 
-```bash
-docker compose up -d
-```
-
-Optional scaling:
+All repos share one image, `shared-cicd/github-runner:latest`. Build it once, and again whenever the Dockerfile changes:
 
 ```bash
-docker compose up -d --scale github-runner=2
+docker compose build github-runner
 ```
+
+Then start each repo's runners. `up.sh` sets `REPO_URL` from the repo name and picks the env file (token) for it from the table at its top; add new repos there:
+
+```bash
+./up.sh eyenerf        # 2 runners
+./up.sh eyenerf 4      # 4 runners
+```
+
+Don't pass `--build` per repo: that's only needed once, and the shared tag means every project picks up the new image on its next `./up.sh`.
 
 ### 4. Verify
 
@@ -108,14 +113,11 @@ Org:
 If `docker compose up` fails with DNS resolution errors (e.g., "Temporary failure resolving 'archive.ubuntu.com'"), build the image manually with host networking:
 
 ```bash
-# Stop any running containers
-docker compose down
-
 # Build with host networking
-DOCKER_BUILDKIT=1 docker build --network=host -t runner-github-runner -f Dockerfile .
+DOCKER_BUILDKIT=1 docker build --network=host -t shared-cicd/github-runner:latest -f Dockerfile .
 
-# Start containers
-docker compose up -d --scale github-runner=4
+# Restart each repo's runners on the new image
+./up.sh <repo>
 ```
 
 ### Missing libGL.so.1 Error
@@ -129,15 +131,14 @@ ImportError: libGL.so.1: cannot open shared object file: No such file or directo
 The Dockerfile includes `libgl1-mesa-glx` to fix this. Verify it's installed:
 
 ```bash
-docker exec runner-github-runner-1 ldconfig -p | grep libGL
+docker exec runner-<repo>-github-runner-1 ldconfig -p | grep libGL
 ```
 
 ### Rebuilding from Scratch
 
 ```bash
-docker compose down
-docker compose build --no-cache
-docker compose up -d --scale github-runner=4
+docker compose build --no-cache github-runner
+./up.sh <repo>   # for each repo
 ```
 
 ### Runners Stuck After a Network Outage
@@ -149,3 +150,15 @@ docker ps --filter name=runner- --format 'table {{.Names}}\t{{.Status}}'
 ```
 
 Runners that never finished deregistering stay listed as offline under the repo's Settings → Actions → Runners; remove them there.
+
+### Stale Packages From Earlier Jobs
+
+With `EPHEMERAL` set, the runner exits after each job and Docker restarts the same container, so its filesystem carries over between jobs. Left alone, the toolcache Pythons (with torch installed into them), pip caches and `/tmp` leftovers grew to 20–35 GB per container. To keep jobs isolated, `cleanup-entrypoint.sh` empties `/opt/hostedtoolcache`, `/root/.cache` and `/tmp` (which holds the runner work directory) every time the container starts. Each job therefore installs Python again, but packages come from the pip cache.
+
+The pip cache (`/root/.cache/pip`) is not wiped: it's the `github-runner-pip-cache` volume, shared by every runner on the host. It only grows, so purge it now and then:
+
+```bash
+docker run --rm -v github-runner-pip-cache:/c alpine sh -c 'rm -rf /c/*'
+```
+
+Containers created before this change don't run the cleanup. Rebuild the image and rerun `./up.sh <repo>` for each repo.

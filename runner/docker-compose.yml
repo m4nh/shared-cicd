@@ -1,4 +1,7 @@
 x-github-runner: &github-runner
+  # A fixed tag so every `-p <project>` shares one image instead of building
+  # its own `<project>-github-runner` copy.
+  image: shared-cicd/github-runner:latest
   # Host network: the default build network can't resolve DNS on this machine.
   build:
     context: .
@@ -29,6 +32,8 @@ x-github-runner: &github-runner
 
   volumes:
     - /var/run/docker.sock:/var/run/docker.sock
+    # One pip cache for all runners; the cleanup entrypoint leaves it alone.
+    - pip-cache:/root/.cache/pip
 
   # If the runner loses GitHub it exits and the entrypoint tries to deregister.
   # That can hang forever while the container still looks "Up", so we check
@@ -56,3 +61,8 @@ services:
       AUTOHEAL_INTERVAL: 60
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+
+volumes:
+  # Fixed name so it's shared across projects rather than prefixed per `-p`.
+  pip-cache:
+    name: github-runner-pip-cache
