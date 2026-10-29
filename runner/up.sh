@@ -13,15 +13,12 @@ declare -A ENV_FILE=(
   [eyenerf]=.env.eyenspect
   [eyesplat]=.env.eyenspect
   [eyeo]=.env.eyenspect
+  [eyecan-supernormal]=.env.eyenspect
   [eyecan-neural-twins-bakery]=.env.eyenspect
   [splatty-patty]=.env.eyeflow
   [supaboard]=.env.eyeflow
   [portreyet]=.env.eyeflow
   [eyeflow-client-py]=.env.eyeflow
-  # Marco's runners, started from his checkout with his own token.
-  [eyeline]=.env.eyeline
-  [eyenode]=.env.eyenode
-  [eyepick]=.env.eyepick
 )
 
 repo=${1:-}
