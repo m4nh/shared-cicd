@@ -1,4 +1,7 @@
-FROM myoung34/github-runner:latest
+# Ubuntu 22.04, pinned: `latest` was Ubuntu 20.04, whose glibc 2.31 cannot load wheels
+# built on newer systems and whose SQLite 3.31 breaks coverage>=7.17.1 (pytest-cov
+# fails at the end of the run with "attempt to write a readonly database").
+FROM myoung34/github-runner:ubuntu-jammy
 
 
 # OpenCV dependencies including libGL.so.1 for Python OpenCV
