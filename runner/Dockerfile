@@ -4,14 +4,16 @@
 FROM myoung34/github-runner:ubuntu-jammy
 
 
-# OpenCV dependencies including libGL.so.1 for Python OpenCV
+# OpenCV dependencies including libGL.so.1 for Python OpenCV, and the EGL/OpenGL
+# runtime that open3d and headless rendering load (libEGL.so.1 is not in the
+# Ubuntu 22.04 base)
 # Note: If you experience DNS failures during build, use:
 #   DOCKER_BUILDKIT=1 docker build --network=host -t shared-cicd/github-runner:latest -f Dockerfile .
 # Then start each repo with: ./up.sh <repo>
 RUN for i in 1 2 3; do \
   apt-get update && \
   apt-get install -y --no-install-recommends --fix-missing \
-  ffmpeg libsm6 libxext6 libgl1 && \
+  ffmpeg libsm6 libxext6 libgl1 libegl1 libgles2 libopengl0 && \
   ok=1 && break; \
   sleep 5; \
   done; \
