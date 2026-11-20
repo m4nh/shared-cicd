@@ -3,6 +3,11 @@ name: Release - C++
 on:
   workflow_call:
     inputs:
+      pre-build-command:
+        description: "Shell command run at the repo root before CMake configure and before the Docker build (e.g. to download private prebuilt dependencies). Receives ASSEX_CREDS in its environment."
+        required: false
+        type: string
+        default: ""
       runner:
         description: "Runner to use"
         required: false
@@ -71,6 +76,9 @@ on:
           libgoogle-glog-dev libgflags-dev libcgal-dev libcgal-qt5-dev libmetis-dev
           libfreeimage-dev libglew-dev libopenimageio-dev openimageio-tools libyaml-cpp-dev
     secrets:
+      ASSEX_CREDS:
+        description: "Optional Assex 'user:password', exposed as ASSEX_CREDS to pre-build-command"
+        required: false
       DOCKER_USERNAME:
         description: "Docker registry username"
         required: false
@@ -107,6 +115,13 @@ jobs:
           sudo tar --strip-components=1 -xzf /tmp/cmake.tar.gz -C /usr/local
           rm /tmp/cmake.tar.gz
           cmake --version
+
+      - name: Pre-build command
+        if: inputs.pre-build-command != ''
+        shell: bash
+        env:
+          ASSEX_CREDS: ${{ secrets.ASSEX_CREDS }}
+        run: ${{ inputs.pre-build-command }}
 
       - name: Configure CMake
         shell: bash
@@ -170,6 +185,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Pre-build command
+        if: inputs.pre-build-command != ''
+        shell: bash
+        env:
+          ASSEX_CREDS: ${{ secrets.ASSEX_CREDS }}
+        run: ${{ inputs.pre-build-command }}
 
       - name: Build Docker Image
         uses: m4nh/shared-cicd/actions/docker/build-docker-image@main
