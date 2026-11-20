@@ -3,6 +3,12 @@ name: CI - C++
 on:
   workflow_call:
     secrets:
+      DOCKER_USERNAME:
+        description: "Docker Hub username, to pull a private container-image or Dockerfile base image"
+        required: false
+      DOCKER_PASSWORD:
+        description: "Docker Hub password or token, to pull a private container-image or Dockerfile base image"
+        required: false
       NEXUS_USERNAME:
         description: "Nexus (Assex) username, exposed to pre-build-command for downloading private packages"
         required: false
@@ -13,6 +19,11 @@ on:
         description: "Nexus (Assex) repository base URL (e.g., https://host/repository/cpplib/), exposed to pre-build-command"
         required: false
     inputs:
+      container-image:
+        description: "Docker image to run the build and tests in (e.g. a prebuilt build environment, possibly private: it is pulled with DOCKER_USERNAME/DOCKER_PASSWORD). When set, the build and tests run in a container job and the apt and CMake installation steps are skipped: the image provides them. The Dockerfile build is logged in to Docker Hub with the same credentials."
+        required: false
+        type: string
+        default: ""
       pre-build-command:
         description: "Shell command run at the repo root before CMake configure and before the Docker build (e.g. to download private prebuilt dependencies). Receives NEXUS_USERNAME, NEXUS_PASSWORD and NEXUS_REPOSITORY_URL in its environment."
         required: false
@@ -110,7 +121,7 @@ jobs:
   build-and-test:
     name: Build & Test
     runs-on: ${{ inputs.runner }}
-    if: inputs.tests-enabled
+    if: inputs.tests-enabled && inputs.container-image == ''
     steps:
       - uses: actions/checkout@v4
 
@@ -159,6 +170,45 @@ jobs:
         run: |
           ctest --test-dir build ${{ inputs.ctest-args }}
 
+  build-and-test-container:
+    name: Build & Test
+    runs-on: ${{ inputs.runner }}
+    if: inputs.tests-enabled && inputs.container-image != ''
+    container:
+      image: ${{ inputs.container-image }}
+      credentials:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Pre-build command
+        if: inputs.pre-build-command != ''
+        shell: bash
+        env:
+          NEXUS_USERNAME: ${{ secrets.NEXUS_USERNAME }}
+          NEXUS_PASSWORD: ${{ secrets.NEXUS_PASSWORD }}
+          NEXUS_REPOSITORY_URL: ${{ secrets.NEXUS_REPOSITORY_URL }}
+        run: ${{ inputs.pre-build-command }}
+
+      - name: Configure CMake
+        shell: bash
+        run: |
+          cmake -B build \
+            -DCMAKE_BUILD_TYPE=${{ inputs.cmake-build-type }} \
+            -DCALIBRY_BUILD_TESTS=ON \
+            ${{ inputs.cmake-extra-args }}
+
+      - name: Build
+        shell: bash
+        run: |
+          cmake --build build -j$(nproc)
+
+      - name: Run tests
+        shell: bash
+        run: |
+          ctest --test-dir build ${{ inputs.ctest-args }}
+
   docker-build:
     name: Build Docker Image
     runs-on: ${{ inputs.runner }}
@@ -174,6 +224,16 @@ jobs:
           NEXUS_PASSWORD: ${{ secrets.NEXUS_PASSWORD }}
           NEXUS_REPOSITORY_URL: ${{ secrets.NEXUS_REPOSITORY_URL }}
         run: ${{ inputs.pre-build-command }}
+
+      - name: Log in to Docker Hub
+        shell: bash
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+        run: |
+          if [ -n "$DOCKER_USERNAME" ]; then
+            echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+          fi
 
       - name: Build Docker image
         uses: m4nh/shared-cicd/actions/docker/build-docker-image@main
