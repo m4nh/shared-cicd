@@ -143,7 +143,7 @@ permissions:
 
 - Installs all system dependencies (CMake, OpenCV, Eigen, Boost, etc.)
 - Installs CMake 3.29.8 (newer than Ubuntu 22.04 default)
-- Configures CMake with specified build type and `-DCALIBRY_BUILD_TESTS=ON`
+- Configures CMake with specified build type and `-DCALIBRATORS_BUILD_TESTS=ON`
 - Builds project with parallel compilation
 - Runs all tests via CTest
 - **Condition**: Only if `tests-enabled=true`

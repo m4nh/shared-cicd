@@ -141,7 +141,7 @@ jobs:
         run: |
           cmake -B build \
             -DCMAKE_BUILD_TYPE=${{ inputs.cmake-build-type }} \
-            -DCALIBRY_BUILD_TESTS=ON \
+            -DCALIBRATORS_BUILD_TESTS=ON \
             ${{ inputs.cmake-extra-args }}
 
       - name: Build
@@ -180,7 +180,7 @@ jobs:
         run: |
           cmake -B build \
             -DCMAKE_BUILD_TYPE=${{ inputs.cmake-build-type }} \
-            -DCALIBRY_BUILD_TESTS=ON \
+            -DCALIBRATORS_BUILD_TESTS=ON \
             ${{ inputs.cmake-extra-args }}
 
       - name: Build
