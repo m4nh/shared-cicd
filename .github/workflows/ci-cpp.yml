@@ -2,7 +2,22 @@ name: CI - C++
 
 on:
   workflow_call:
+    secrets:
+      NEXUS_USERNAME:
+        description: "Nexus (Assex) username, exposed to pre-build-command for downloading private packages"
+        required: false
+      NEXUS_PASSWORD:
+        description: "Nexus (Assex) password, exposed to pre-build-command for downloading private packages"
+        required: false
+      NEXUS_REPOSITORY_URL:
+        description: "Nexus (Assex) repository base URL (e.g., https://host/repository/cpplib/), exposed to pre-build-command"
+        required: false
     inputs:
+      pre-build-command:
+        description: "Shell command run at the repo root before CMake configure and before the Docker build (e.g. to download private prebuilt dependencies). Receives NEXUS_USERNAME, NEXUS_PASSWORD and NEXUS_REPOSITORY_URL in its environment."
+        required: false
+        type: string
+        default: ""
       runner:
         description: "Runner to use"
         required: false
@@ -117,6 +132,15 @@ jobs:
           rm /tmp/cmake.tar.gz
           cmake --version
 
+      - name: Pre-build command
+        if: inputs.pre-build-command != ''
+        shell: bash
+        env:
+          NEXUS_USERNAME: ${{ secrets.NEXUS_USERNAME }}
+          NEXUS_PASSWORD: ${{ secrets.NEXUS_PASSWORD }}
+          NEXUS_REPOSITORY_URL: ${{ secrets.NEXUS_REPOSITORY_URL }}
+        run: ${{ inputs.pre-build-command }}
+
       - name: Configure CMake
         shell: bash
         run: |
@@ -141,6 +165,15 @@ jobs:
     if: inputs.docker-build-enabled
     steps:
       - uses: actions/checkout@v4
+
+      - name: Pre-build command
+        if: inputs.pre-build-command != ''
+        shell: bash
+        env:
+          NEXUS_USERNAME: ${{ secrets.NEXUS_USERNAME }}
+          NEXUS_PASSWORD: ${{ secrets.NEXUS_PASSWORD }}
+          NEXUS_REPOSITORY_URL: ${{ secrets.NEXUS_REPOSITORY_URL }}
+        run: ${{ inputs.pre-build-command }}
 
       - name: Build Docker image
         uses: m4nh/shared-cicd/actions/docker/build-docker-image@main
